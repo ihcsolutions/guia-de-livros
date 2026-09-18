@@ -1,11 +1,12 @@
 // ============================================================
-// Guia de Livros — V2 (tema escuro)
+// Guia de Livros — Versão 2.1
+// © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
+const APP_VERSION = "2.1";
 
-// ---------- Configuração de critérios ----------
 const CRITERIOS_VISIVEIS = [
   { key: "Violência", icon: "⚔️", label: "Violência" },
   { key: "Sexo", icon: "💞", label: "Sexo" },
@@ -26,7 +27,6 @@ const CRITERIOS_ADICIONAIS = [
   { key: "Oposição ao cristianismo", icon: "⛪", label: "Oposição ao cristianismo" }
 ];
 
-// ---------- Helpers ----------
 function badgeClass(nivel){
   const map = { tranquilo:"tranquilo", atencao:"atencao", sensivel:"sensivel", forte:"forte", cristao:"cristao" };
   return map[nivel] || "tranquilo";
@@ -50,7 +50,6 @@ function normalizar(str){
   return String(str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-// ---------- Navegação ----------
 document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
@@ -60,7 +59,6 @@ document.querySelectorAll(".tab").forEach(btn => {
   });
 });
 
-// ---------- Histórico ----------
 function getHistorico(){
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   catch { return []; }
@@ -86,7 +84,6 @@ function removerDoHistorico(titulo, autor){
   renderRanking();
 }
 
-// ---------- Render: Análise individual ----------
 function renderAnalise(a){
   const box = document.getElementById("resultado");
   box.classList.remove("hidden");
@@ -151,7 +148,7 @@ function renderAnalise(a){
 
       <button class="toggle-btn" id="btn-toggle" type="button">
         <span class="arrow">▸</span>
-        Saiba mais (${CRITERIOS_ADICIONAIS.length} critérios adicionais)
+        <span class="toggle-text">Saiba mais (${CRITERIOS_ADICIONAIS.length} critérios adicionais)</span>
       </button>
       <div class="hidden-criteria" id="hidden-criteria">
         ${adicionaisHTML}
@@ -165,22 +162,21 @@ function renderAnalise(a){
     </div>
   `;
 
-  // Toggle "Saiba mais"
   const toggleBtn = document.getElementById("btn-toggle");
   const hiddenDiv = document.getElementById("hidden-criteria");
+  const toggleText = toggleBtn.querySelector(".toggle-text");
   toggleBtn.addEventListener("click", () => {
     toggleBtn.classList.toggle("open");
     hiddenDiv.classList.toggle("open");
     const aberto = toggleBtn.classList.contains("open");
-    toggleBtn.lastChild.textContent = aberto
-      ? " Ver menos"
-      : ` Saiba mais (${CRITERIOS_ADICIONAIS.length} critérios adicionais)`;
+    toggleText.textContent = aberto
+      ? "Ver menos"
+      : `Saiba mais (${CRITERIOS_ADICIONAIS.length} critérios adicionais)`;
   });
 
   box.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-// ---------- Pesquisar ----------
 document.getElementById("btn-analisar").addEventListener("click", async () => {
   const titulo = document.getElementById("input-titulo").value.trim();
   const autor  = document.getElementById("input-autor").value.trim();
@@ -220,7 +216,6 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
   }
 });
 
-// ---------- Histórico: render ----------
 function renderHistorico(){
   const lista = getHistorico();
   const el = document.getElementById("lista-historico");
@@ -238,7 +233,7 @@ function renderHistorico(){
         <div class="meta-inline">
           <span class="badge ${badgeClass(l.vereditoNivel)}">${badgeLabel(l.vereditoNivel)}</span>
           <span style="color: var(--gold2); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
-          ${l.faixaEtaria ? `<span style="color: var(--ink-dim);">👦 ${esc(l.faixaEtaria)}</span>` : ""}
+          ${l.faixaEtaria ? `<span style="color: var(--ink-soft);">👦 ${esc(l.faixaEtaria)}</span>` : ""}
         </div>
       </div>
       <div class="acoes">
@@ -266,7 +261,6 @@ document.getElementById("btn-limpar-historico").addEventListener("click", () => 
   }
 });
 
-// ---------- Ranking ----------
 function compatibilidadeIdade(idade, faixa){
   if (!faixa) return { texto: "Faixa desconhecida", nivel: "atencao", score: 0 };
 
@@ -333,7 +327,7 @@ function renderRanking(){
           <p class="autor">${esc(l.autor || "")}</p>
           <div class="meta">
             <span style="color: var(--gold2); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
-            <span style="color: var(--ink-dim);">👦 ${esc(l.faixaEtaria || "?")}</span>
+            <span>👦 ${esc(l.faixaEtaria || "?")}</span>
             <span class="badge ${badgeClass(l._comp.nivel)}">${l._comp.texto}</span>
             <span class="badge ${badgeClass(l.vereditoNivel)}">${badgeLabel(l.vereditoNivel)}</span>
           </div>
@@ -349,11 +343,17 @@ document.getElementById("input-idade").addEventListener("input", renderRanking);
 document.getElementById("select-ordem").addEventListener("change", renderRanking);
 document.getElementById("filtro-sem-alertas").addEventListener("change", renderRanking);
 
-// ---------- Init ----------
 renderHistorico();
 renderRanking();
 
-// ---------- Confetti decorativo ----------
+(function(){
+  const elVer = document.getElementById("app-version");
+  if (elVer) elVer.textContent = APP_VERSION;
+
+  const elYear = document.getElementById("copy-year");
+  if (elYear) elYear.textContent = new Date().getFullYear();
+})();
+
 (function(){
   const container = document.getElementById("confetti");
   const colors = ["#ff7b54","#3aacff","#33d17a","#ffc93c","#ff5c8a","#9b7bff","#17c3b2"];
