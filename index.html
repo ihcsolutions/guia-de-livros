@@ -1,88 +1,93 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Guia de Livros — Análise por IA</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Livros — Análise por IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-icon">📚</span>
-      <div>
-        <h1>Guia de Livros</h1>
-        <p>Descubra se um livro é adequado para sua família</p>
-      </div>
-    </div>
-    <nav class="tabs">
-      <button class="tab active" data-tab="pesquisar">🔎 Pesquisar</button>
-      <button class="tab" data-tab="historico">📚 Histórico</button>
-      <button class="tab" data-tab="ranking">🏆 Ranking</button>
-    </nav>
+<div class="confetti" id="confetti"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="badge-top">✨ leitura em família ✨</div>
+    <h1 class="title">Guia de Livros</h1>
+    <p class="subtitle">Descubra se um livro é adequado para sua família — análise cuidadosa por IA com base no guia familiar cristão.</p>
   </header>
 
-  <main>
+  <nav class="tabs">
+    <button class="tab active" data-tab="pesquisar">🔎 Pesquisar</button>
+    <button class="tab" data-tab="historico">📚 Histórico</button>
+    <button class="tab" data-tab="ranking">🏆 Ranking</button>
+  </nav>
 
-    <section id="tab-pesquisar" class="tab-panel active">
-      <div class="search-box">
-        <h2>Qual livro você quer avaliar?</h2>
-        <input id="input-titulo" type="text" placeholder="Nome do livro..." />
-        <input id="input-autor" type="text" placeholder="Autor (opcional)" />
-        <button id="btn-analisar" class="btn-primary">🔎 Analisar livro</button>
-        <p id="search-status" class="status"></p>
-      </div>
+  <!-- ===================== PESQUISAR ===================== -->
+  <section id="tab-pesquisar" class="tab-panel active">
+    <div class="search-box">
+      <h2>Qual livro você quer avaliar?</h2>
+      <input id="input-titulo" type="text" placeholder="Nome do livro..." />
+      <input id="input-autor" type="text" placeholder="Autor (opcional)" />
+      <button id="btn-analisar" class="btn-primary">🔎 ANALISAR</button>
+      <p id="search-status" class="status"></p>
+    </div>
 
-      <div id="resultado" class="resultado hidden"></div>
-    </section>
+    <div id="resultado" class="resultado hidden"></div>
+  </section>
 
-    <section id="tab-historico" class="tab-panel">
-      <div class="panel-header">
-        <h2>📚 Histórico de consultas</h2>
-        <button id="btn-limpar-historico" class="btn-ghost">🗑️ Apagar histórico</button>
-      </div>
-      <div id="lista-historico"></div>
-    </section>
+  <!-- ===================== HISTÓRICO ===================== -->
+  <section id="tab-historico" class="tab-panel">
+    <div class="panel-header">
+      <h2>📚 Histórico de consultas</h2>
+      <button id="btn-limpar-historico" class="btn-ghost">🗑️ Apagar histórico</button>
+    </div>
+    <div id="lista-historico"></div>
+  </section>
 
-    <section id="tab-ranking" class="tab-panel">
-      <div class="panel-header">
-        <h2>🏆 Ranking personalizado</h2>
-      </div>
+  <!-- ===================== RANKING ===================== -->
+  <section id="tab-ranking" class="tab-panel">
+    <div class="panel-header">
+      <h2>🏆 Ranking personalizado</h2>
+    </div>
 
-      <div class="ranking-controls">
-        <label>
-          Para qual idade?
-          <input id="input-idade" type="number" min="3" max="16" value="9" />
-          anos
-        </label>
+    <div class="ranking-controls">
+      <label>
+        Para qual idade?
+        <input id="input-idade" type="number" min="3" max="16" value="9" />
+        anos
+      </label>
 
-        <label>
-          Ordenar por
-          <select id="select-ordem">
-            <option value="recomendacao">🏆 Recomendação para idade</option>
-            <option value="qualidade">⭐ Qualidade literária</option>
-            <option value="valores">🧭 Valores</option>
-            <option value="sensivel">🟢 Menos conteúdo sensível</option>
-            <option value="cristao">✝️ Alinhamento cristão</option>
-          </select>
-        </label>
+      <label>
+        Ordenar por
+        <select id="select-ordem">
+          <option value="recomendacao">🏆 Recomendação para idade</option>
+          <option value="qualidade">⭐ Qualidade literária</option>
+          <option value="valores">🧭 Valores</option>
+          <option value="sensivel">🟢 Menos conteúdo sensível</option>
+          <option value="cristao">✝️ Alinhamento cristão</option>
+        </select>
+      </label>
 
-        <label class="check">
-          <input id="filtro-sem-alertas" type="checkbox" />
-          Mostrar somente sem alertas relevantes
-        </label>
-      </div>
+      <label class="check">
+        <input id="filtro-sem-alertas" type="checkbox" />
+        Mostrar somente sem alertas relevantes
+      </label>
+    </div>
 
-      <div id="lista-ranking"></div>
-    </section>
+    <div id="lista-ranking"></div>
+  </section>
 
-  </main>
+</div>
 
-  <footer>
-    <p>Guia de Livros — análise assistida por IA · metodologia baseada no guia familiar</p>
-  </footer>
+<footer>
+  Feito com carinho para ajudar famílias a escolherem boas histórias 💙
+</footer>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
