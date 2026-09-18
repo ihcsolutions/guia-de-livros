@@ -1,10 +1,54 @@
 // ============================================================
-// Guia de Livros — V1
-// Backend: https://guia-de-livros-brain.ihcsolutions-contato.workers.dev
+// Guia de Livros — V2 (tema escuro)
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
-const STORAGE_KEY = "guia_livros_historico_v1";
+const STORAGE_KEY = "guia_livros_historico_v2";
+
+// ---------- Configuração de critérios ----------
+const CRITERIOS_VISIVEIS = [
+  { key: "Violência", icon: "⚔️", label: "Violência" },
+  { key: "Sexo", icon: "💞", label: "Sexo" },
+  { key: "Identidade de Gênero", icon: "🌈", label: "Identidade de Gênero" },
+  { key: "Religião", icon: "🙏", label: "Religião" }
+];
+
+const CRITERIOS_ADICIONAIS = [
+  { key: "Medo/Terror", icon: "😨", label: "Medo / Terror" },
+  { key: "Morte", icon: "☠️", label: "Morte" },
+  { key: "Linguagem", icon: "🗣️", label: "Linguagem" },
+  { key: "Bullying", icon: "😔", label: "Bullying" },
+  { key: "Respeito aos adultos", icon: "👨‍👩‍👧", label: "Respeito aos adultos" },
+  { key: "Respeito à autoridade", icon: "🏛️", label: "Respeito à autoridade" },
+  { key: "Respeito aos professores", icon: "🎓", label: "Respeito aos professores" },
+  { key: "Obediência", icon: "📏", label: "Obediência" },
+  { key: "Ocultismo", icon: "🔮", label: "Ocultismo" },
+  { key: "Oposição ao cristianismo", icon: "⛪", label: "Oposição ao cristianismo" }
+];
+
+// ---------- Helpers ----------
+function badgeClass(nivel){
+  const map = { tranquilo:"tranquilo", atencao:"atencao", sensivel:"sensivel", forte:"forte", cristao:"cristao" };
+  return map[nivel] || "tranquilo";
+}
+function badgeLabel(nivel){
+  const map = {
+    tranquilo: "🟢 Tranquilo",
+    atencao:   "🟡 Atenção",
+    sensivel:  "🟠 Sensível",
+    forte:     "🔴 Forte",
+    cristao:   "✝️ Cristão explícito"
+  };
+  return map[nivel] || nivel;
+}
+function esc(str){
+  return String(str ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
+function normalizar(str){
+  return String(str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
 
 // ---------- Navegação ----------
 document.querySelectorAll(".tab").forEach(btn => {
@@ -17,118 +61,121 @@ document.querySelectorAll(".tab").forEach(btn => {
 });
 
 // ---------- Histórico ----------
-function getHistorico() {
+function getHistorico(){
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   catch { return []; }
 }
-function salvarHistorico(lista) {
+function salvarHistorico(lista){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
 }
-function adicionarAoHistorico(analise) {
+function adicionarAoHistorico(analise){
   const lista = getHistorico();
   const filtrado = lista.filter(l =>
-    !(l.titulo === analise.titulo && l.autor === analise.autor)
+    normalizar(l.titulo) !== normalizar(analise.titulo) ||
+    normalizar(l.autor)  !== normalizar(analise.autor)
   );
   filtrado.unshift({ ...analise, consultadoEm: new Date().toISOString() });
   salvarHistorico(filtrado);
 }
-function removerDoHistorico(titulo, autor) {
+function removerDoHistorico(titulo, autor){
   const lista = getHistorico().filter(l =>
-    !(l.titulo === titulo && l.autor === autor)
+    !(normalizar(l.titulo) === normalizar(titulo) && normalizar(l.autor) === normalizar(autor))
   );
   salvarHistorico(lista);
   renderHistorico();
   renderRanking();
 }
 
-// ---------- Helpers ----------
-function badgeClass(nivel) {
-  const map = {
-    tranquilo: "tranquilo",
-    atencao: "atencao",
-    sensivel: "sensivel",
-    forte: "forte",
-    cristao: "cristao"
-  };
-  return map[nivel] || "tranquilo";
-}
-function badgeLabel(nivel) {
-  const map = {
-    tranquilo: "🟢 Tranquilo",
-    atencao: "🟡 Atenção",
-    sensivel: "🟠 Sensível",
-    forte: "🔴 Forte",
-    cristao: "✝️ Cristão explícito"
-  };
-  return map[nivel] || nivel;
-}
-
-// ---------- Render: análise individual ----------
-function renderAnalise(a) {
+// ---------- Render: Análise individual ----------
+function renderAnalise(a){
   const box = document.getElementById("resultado");
   box.classList.remove("hidden");
 
   const capa = a.capa
-    ? `<img src="${a.capa}" alt="Capa" onerror="this.parentNode.innerHTML='📖'">`
+    ? `<img src="${esc(a.capa)}" alt="Capa" onerror="this.style.display='none'">`
     : "📖";
 
-  const vereditoCor = {
-    tranquilo: "var(--c-tranquilo)",
-    atencao: "var(--c-atencao)",
-    sensivel: "var(--c-sensivel)",
-    forte: "var(--c-forte)",
-    cristao: "var(--c-cristao)"
-  }[a.vereditoNivel] || "var(--verde)";
+  const criterios = a.criterios || {};
 
-  const criteriosHTML = Object.entries(a.criterios || {}).map(([nome, nivel]) =>
-    `<div class="crit-item">
-       <span>${nome}</span>
-       <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
-     </div>`
-  ).join("");
+  const visiveisHTML = CRITERIOS_VISIVEIS.map(c => {
+    const nivel = criterios[c.key] || "tranquilo";
+    return `
+      <div class="crit-item">
+        <span class="label">${c.icon} ${esc(c.label)}</span>
+        <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
+      </div>`;
+  }).join("");
+
+  const adicionaisHTML = CRITERIOS_ADICIONAIS.map(c => {
+    const nivel = criterios[c.key] || "tranquilo";
+    return `
+      <div class="crit-item">
+        <span class="label">${c.icon} ${esc(c.label)}</span>
+        <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
+      </div>`;
+  }).join("");
 
   const fontesHTML = (a.fontes || []).length
     ? `<p class="fontes"><strong>Fontes:</strong> ${
-        a.fontes.map(f => f.url ? `<a href="${f.url}" target="_blank">${f.nome}</a>` : f.nome).join(" · ")
+        a.fontes.map(f => f.url
+          ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.nome)}</a>`
+          : esc(f.nome)
+        ).join(" · ")
       }</p>`
     : "";
 
   box.innerHTML = `
-    <div class="card">
+    <div class="card" style="--accent: var(--sky);">
       <div class="book-header">
-        <div class="book-cover">${capa}</div>
+        <div class="cover">${capa}</div>
         <div class="book-info">
-          <h3>${a.titulo}</h3>
-          <p class="autor">${a.autor || "Autor não identificado"}</p>
+          <h3>${esc(a.titulo)}</h3>
+          <p class="autor">${esc(a.autor || "Autor não identificado")}</p>
           <div class="meta-line">
-            ${a.editora && a.editora !== "Desconhecido" ? `<span>📕 ${a.editora}</span>` : ""}
-            ${a.ano ? `<span>📅 ${a.ano}</span>` : ""}
-            ${a.paginas ? `<span>📄 ${a.paginas} págs.</span>` : ""}
+            ${a.editora && a.editora !== "Desconhecido" ? `<span>📕 ${esc(a.editora)}</span>` : ""}
+            ${a.ano ? `<span>📅 ${esc(a.ano)}</span>` : ""}
+            ${a.paginas ? `<span>📄 ${esc(a.paginas)} págs.</span>` : ""}
           </div>
-          <div class="meta-line">
-            <span>👦 Faixa etária: <strong>${a.faixaEtaria || "não identificada"}</strong></span>
-          </div>
-          <div class="veredito-box">
-            <div class="nota-grande">${(a.nota ?? "—")}<small>/10</small></div>
-            <div class="veredito-text" style="color:${vereditoCor}">
-              ${a.veredito || ""}
-            </div>
+          ${a.faixaEtaria ? `<span class="age-line">👦 Faixa etária: ${esc(a.faixaEtaria)}</span>` : ""}
+          <div class="score-box">
+            <div class="score-num">${a.nota ?? "—"}<small>/10</small></div>
+            <div class="verdict-text ${badgeClass(a.vereditoNivel)}">${esc(a.veredito || "")}</div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <h4 class="section-title">⚠️ Conteúdo sensível e comportamento</h4>
-      <div class="crit-list">${criteriosHTML}</div>
+    <div class="card" style="--accent: var(--coral);">
+      <h4 class="section-title">⚠️ Conteúdo sensível</h4>
+      <div class="crit-list">${visiveisHTML}</div>
+
+      <button class="toggle-btn" id="btn-toggle" type="button">
+        <span class="arrow">▸</span>
+        Saiba mais (${CRITERIOS_ADICIONAIS.length} critérios adicionais)
+      </button>
+      <div class="hidden-criteria" id="hidden-criteria">
+        ${adicionaisHTML}
+      </div>
     </div>
 
-    <div class="card">
+    <div class="card" style="--accent: var(--mint);">
       <h4 class="section-title">🧭 Conclusão</h4>
-      <p class="conclusao">${a.conclusao || ""}</p>
+      <p class="conclusao">${esc(a.conclusao || "")}</p>
       ${fontesHTML}
     </div>
   `;
+
+  // Toggle "Saiba mais"
+  const toggleBtn = document.getElementById("btn-toggle");
+  const hiddenDiv = document.getElementById("hidden-criteria");
+  toggleBtn.addEventListener("click", () => {
+    toggleBtn.classList.toggle("open");
+    hiddenDiv.classList.toggle("open");
+    const aberto = toggleBtn.classList.contains("open");
+    toggleBtn.lastChild.textContent = aberto
+      ? " Ver menos"
+      : ` Saiba mais (${CRITERIOS_ADICIONAIS.length} critérios adicionais)`;
+  });
 
   box.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -136,17 +183,17 @@ function renderAnalise(a) {
 // ---------- Pesquisar ----------
 document.getElementById("btn-analisar").addEventListener("click", async () => {
   const titulo = document.getElementById("input-titulo").value.trim();
-  const autor = document.getElementById("input-autor").value.trim();
+  const autor  = document.getElementById("input-autor").value.trim();
   const status = document.getElementById("search-status");
-  const btn = document.getElementById("btn-analisar");
+  const btn    = document.getElementById("btn-analisar");
 
-  if (!titulo) {
+  if (!titulo){
     status.textContent = "⚠️ Digite o nome do livro.";
     return;
   }
 
   btn.disabled = true;
-  status.textContent = "🔎 Buscando informações e analisando... (pode levar até 20s)";
+  status.textContent = "🔎 Buscando informações e analisando...";
 
   try {
     const resp = await fetch(WORKER_URL, {
@@ -165,7 +212,7 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
     renderRanking();
 
     status.textContent = "✅ Análise concluída.";
-  } catch (err) {
+  } catch (err){
     console.error(err);
     status.textContent = "❌ " + err.message;
   } finally {
@@ -173,34 +220,38 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
   }
 });
 
-// ---------- Histórico ----------
-function renderHistorico() {
+// ---------- Histórico: render ----------
+function renderHistorico(){
   const lista = getHistorico();
   const el = document.getElementById("lista-historico");
 
-  if (!lista.length) {
-    el.innerHTML = `<div class="empty-state">Nenhum livro consultado ainda.</div>`;
+  if (!lista.length){
+    el.innerHTML = `<div class="empty-state">Nenhum livro consultado ainda.<br>Vá em <strong>Pesquisar</strong> para começar.</div>`;
     return;
   }
 
   el.innerHTML = lista.map(l => `
     <div class="livro-item">
       <div class="info">
-        <h4>${l.titulo}</h4>
-        <p>${l.autor || ""} · consultado em ${new Date(l.consultadoEm).toLocaleDateString("pt-BR")}</p>
-        <p style="margin-top:6px">
-          ⭐ ${l.nota ?? "—"}/10 · 👦 ${l.faixaEtaria || "?"} · ${badgeLabel(l.vereditoNivel || "tranquilo")}
-        </p>
+        <h4>${esc(l.titulo)}</h4>
+        <p>${esc(l.autor || "")} · consultado em ${new Date(l.consultadoEm).toLocaleDateString("pt-BR")}</p>
+        <div class="meta-inline">
+          <span class="badge ${badgeClass(l.vereditoNivel)}">${badgeLabel(l.vereditoNivel)}</span>
+          <span style="color: var(--gold2); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
+          ${l.faixaEtaria ? `<span style="color: var(--ink-dim);">👦 ${esc(l.faixaEtaria)}</span>` : ""}
+        </div>
       </div>
       <div class="acoes">
-        <button class="icon-btn" onclick='abrirDoHistorico(${JSON.stringify(l.titulo)},${JSON.stringify(l.autor || "")})'>📖</button>
-        <button class="icon-btn" onclick='removerDoHistorico(${JSON.stringify(l.titulo)},${JSON.stringify(l.autor || "")})'>🗑️</button>
+        <button class="icon-btn" title="Abrir análise"
+          onclick='abrirDoHistorico(${JSON.stringify(l.titulo)},${JSON.stringify(l.autor || "")})'>📖</button>
+        <button class="icon-btn" title="Excluir"
+          onclick='removerDoHistorico(${JSON.stringify(l.titulo)},${JSON.stringify(l.autor || "")})'>🗑️</button>
       </div>
     </div>
   `).join("");
 }
 
-function abrirDoHistorico(titulo, autor) {
+function abrirDoHistorico(titulo, autor){
   const item = getHistorico().find(l => l.titulo === titulo && l.autor === autor);
   if (!item) return;
   document.querySelector('.tab[data-tab="pesquisar"]').click();
@@ -208,7 +259,7 @@ function abrirDoHistorico(titulo, autor) {
 }
 
 document.getElementById("btn-limpar-historico").addEventListener("click", () => {
-  if (confirm("Apagar todo o histórico?")) {
+  if (confirm("Apagar todo o histórico?")){
     localStorage.removeItem(STORAGE_KEY);
     renderHistorico();
     renderRanking();
@@ -216,14 +267,14 @@ document.getElementById("btn-limpar-historico").addEventListener("click", () => 
 });
 
 // ---------- Ranking ----------
-function compatibilidadeIdade(idade, faixa) {
+function compatibilidadeIdade(idade, faixa){
   if (!faixa) return { texto: "Faixa desconhecida", nivel: "atencao", score: 0 };
 
-  const nums = (faixa.match(/\d+/g) || []).map(Number);
-  if (!nums.length) return { texto: "Faixa desconhecida", nivel: "atencao", score: 0 };
+  const nums = String(faixa).match(/\d+/g);
+  if (!nums) return { texto: "Faixa desconhecida", nivel: "atencao", score: 0 };
 
-  const min = nums[0];
-  const max = nums[1] ?? min + 4;
+  const min = parseInt(nums[0], 10);
+  const max = nums[1] ? parseInt(nums[1], 10) : min + 4;
 
   if (idade < min - 1) return { texto: "🔴 Acima da idade", nivel: "forte", score: -3 };
   if (idade < min)     return { texto: "🟡 Um pouco acima", nivel: "sensivel", score: -1 };
@@ -231,15 +282,15 @@ function compatibilidadeIdade(idade, faixa) {
   return { texto: "🟢 Muito compatível", nivel: "tranquilo", score: 2 };
 }
 
-function renderRanking() {
-  const idade = parseInt(document.getElementById("input-idade").value) || 9;
+function renderRanking(){
+  const idade = parseInt(document.getElementById("input-idade").value, 10) || 9;
   const ordem = document.getElementById("select-ordem").value;
   const semAlertas = document.getElementById("filtro-sem-alertas").checked;
 
   let lista = getHistorico();
 
-  if (semAlertas) {
-    lista = lista.filter(l => (l.vereditoNivel === "tranquilo" || l.vereditoNivel === "cristao"));
+  if (semAlertas){
+    lista = lista.filter(l => l.vereditoNivel === "tranquilo" || l.vereditoNivel === "cristao");
   }
 
   lista = lista.map(l => {
@@ -256,32 +307,39 @@ function renderRanking() {
     qualidade:   (a, b) => (b.nota || 0) - (a.nota || 0),
     valores:     (a, b) => (b.valores || 0) - (a.valores || 0),
     sensivel:    (a, b) => (b.notaSensivel || 0) - (a.notaSensivel || 0),
-    cristao:     (a, b) => (b.vereditoNivel === "cristao" ? 1 : 0) - (a.vereditoNivel === "cristao" ? 1 : 0)
+    cristao:     (a, b) =>
+      (b.vereditoNivel === "cristao" ? 1 : 0) -
+      (a.vereditoNivel === "cristao" ? 1 : 0)
   };
   lista.sort(sorters[ordem] || sorters.recomendacao);
 
   const el = document.getElementById("lista-ranking");
-  if (!lista.length) {
+  if (!lista.length){
     el.innerHTML = `<div class="empty-state">Nenhum livro no histórico para ranquear.</div>`;
     return;
   }
 
   el.innerHTML = lista.map((l, i) => {
-    const medalha = ["🥇","🥈","🥉"][i] || `${i + 1}º`;
+    let posClass = "other", posText = `${i + 1}º`;
+    if (i === 0){ posClass = "gold";   posText = "🥇"; }
+    else if (i === 1){ posClass = "silver"; posText = "🥈"; }
+    else if (i === 2){ posClass = "bronze"; posText = "🥉"; }
+
     return `
       <div class="rank-item">
-        <div class="rank-pos">${medalha}</div>
+        <div class="rank-pos ${posClass}">${posText}</div>
         <div class="rank-body">
-          <h4>${l.titulo}</h4>
-          <p style="font-size:13px;color:rgba(0,0,0,0.6)">${l.autor || ""}</p>
+          <h4>${esc(l.titulo)}</h4>
+          <p class="autor">${esc(l.autor || "")}</p>
           <div class="meta">
-            <span>⭐ ${l.nota ?? "—"}/10</span>
-            <span>👦 ${l.faixaEtaria || "?"}</span>
-            <span class="compat-tag badge ${badgeClass(l._comp.nivel)}">${l._comp.texto}</span>
-            <span>${badgeLabel(l.vereditoNivel || "tranquilo")}</span>
+            <span style="color: var(--gold2); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
+            <span style="color: var(--ink-dim);">👦 ${esc(l.faixaEtaria || "?")}</span>
+            <span class="badge ${badgeClass(l._comp.nivel)}">${l._comp.texto}</span>
+            <span class="badge ${badgeClass(l.vereditoNivel)}">${badgeLabel(l.vereditoNivel)}</span>
           </div>
         </div>
-        <button class="icon-btn" onclick='abrirDoHistorico(${JSON.stringify(l.titulo)},${JSON.stringify(l.autor || "")})'>📖</button>
+        <button class="icon-btn" title="Abrir análise"
+          onclick='abrirDoHistorico(${JSON.stringify(l.titulo)},${JSON.stringify(l.autor || "")})'>📖</button>
       </div>
     `;
   }).join("");
@@ -294,3 +352,19 @@ document.getElementById("filtro-sem-alertas").addEventListener("change", renderR
 // ---------- Init ----------
 renderHistorico();
 renderRanking();
+
+// ---------- Confetti decorativo ----------
+(function(){
+  const container = document.getElementById("confetti");
+  const colors = ["#ff7b54","#3aacff","#33d17a","#ffc93c","#ff5c8a","#9b7bff","#17c3b2"];
+  for (let i = 0; i < 24; i++){
+    const s = document.createElement("span");
+    const size = 4 + Math.random() * 7;
+    s.style.width  = size + "px";
+    s.style.height = size + "px";
+    s.style.left   = (Math.random() * 100) + "vw";
+    s.style.top    = (Math.random() * 100) + "vh";
+    s.style.background = colors[Math.floor(Math.random() * colors.length)];
+    container.appendChild(s);
+  }
+})();
