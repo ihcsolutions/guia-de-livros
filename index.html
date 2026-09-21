@@ -11,84 +11,124 @@
 </head>
 <body>
 
-<div class="confetti" id="confetti"></div>
-
-<div class="wrap">
+<div class="app">
 
   <header class="hero">
-    <div class="badge-top">✨ leitura em família ✨</div>
-    <h1 class="title">Guia de Livros</h1>
-    <p class="subtitle">Descubra se um livro é adequado para sua família — análise cuidadosa por IA com base no guia familiar cristão.</p>
+    <div class="hero-topbar">
+      <button class="icon-circle" aria-label="Nuvem">☁️</button>
+      <div class="hero-avatar" aria-hidden="true">👤</div>
+      <button class="icon-circle" aria-label="Menu">☰</button>
+    </div>
+
+    <div class="hero-content">
+      <div class="badge-top">✨ leitura em família ✨</div>
+      <h1 class="title">Guia de Livros</h1>
+      <p class="subtitle">Análise inteligente de livros infantis para famílias cristãs.</p>
+
+      <div class="feature-card">
+        <div class="feature-head">
+          <span class="feature-icon">📚</span>
+          <div>
+            <div class="feature-title">Análise por IA</div>
+            <div class="feature-sub">14 critérios · baseado no seu guia</div>
+          </div>
+        </div>
+        <div class="progress"><div class="progress-fill"></div></div>
+        <div class="progress-meta">
+          <span>Guia v2.2</span>
+          <span>● Pronto</span>
+        </div>
+      </div>
+    </div>
   </header>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="pesquisar">🔎 Pesquisar</button>
-    <button class="tab" data-tab="historico">📚 Histórico</button>
-    <button class="tab" data-tab="ranking">🏆 Ranking</button>
-  </nav>
+  <div class="wave" aria-hidden="true">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" fill="#E6E8F2"/>
+    </svg>
+  </div>
 
-  <section id="tab-pesquisar" class="tab-panel active">
-    <div class="search-box">
-      <h2>Qual livro você quer avaliar?</h2>
-      <input id="input-titulo" type="text" placeholder="Nome do livro..." />
-      <input id="input-autor" type="text" placeholder="Autor (opcional)" />
-      <button id="btn-analisar" class="btn-primary">🔎 ANALISAR</button>
-      <p id="search-status" class="status"></p>
-    </div>
+  <main class="app-main">
 
-    <div id="resultado" class="resultado hidden"></div>
-  </section>
+    <nav class="tabs">
+      <button class="tab active" data-tab="pesquisar">🔎 Pesquisar</button>
+      <button class="tab" data-tab="historico">📚 Histórico</button>
+      <button class="tab" data-tab="ranking">🏆 Ranking</button>
+    </nav>
 
-  <section id="tab-historico" class="tab-panel">
-    <div class="panel-header">
-      <h2>📚 Histórico de consultas</h2>
-      <button id="btn-limpar-historico" class="btn-ghost">🗑️ Apagar histórico</button>
-    </div>
-    <div id="lista-historico"></div>
-  </section>
+    <section id="tab-pesquisar" class="tab-panel active">
+      <div class="search-box">
+        <h2>Qual livro você quer avaliar?</h2>
 
-  <section id="tab-ranking" class="tab-panel">
-    <div class="panel-header">
-      <h2>🏆 Ranking personalizado</h2>
-    </div>
+        <div class="search-field">
+          <span class="search-icon">📖</span>
+          <input id="input-titulo" type="text" placeholder="Nome do livro...">
+        </div>
 
-    <div class="ranking-controls">
-      <label>
-        Para qual idade?
-        <input id="input-idade" type="number" min="3" max="16" value="9" />
-        anos
-      </label>
+        <div class="search-field">
+          <span class="search-icon">✍️</span>
+          <input id="input-autor" type="text" placeholder="Autor (opcional)">
+        </div>
 
-      <label>
-        Ordenar por
-        <select id="select-ordem">
-          <option value="recomendacao">🏆 Recomendação para idade</option>
-          <option value="qualidade">⭐ Qualidade literária</option>
-          <option value="valores">🧭 Valores</option>
-          <option value="sensivel">🟢 Menos conteúdo sensível</option>
-          <option value="cristao">✝️ Alinhamento cristão</option>
-        </select>
-      </label>
+        <button id="btn-analisar" class="btn-primary">🔎 ANALISAR</button>
+        <p id="search-status" class="status"></p>
+      </div>
 
-      <label class="check">
-        <input id="filtro-sem-alertas" type="checkbox" />
-        Mostrar somente sem alertas relevantes
-      </label>
-    </div>
+      <div id="resultado" class="resultado hidden"></div>
+    </section>
 
-    <div id="lista-ranking"></div>
-  </section>
+    <section id="tab-historico" class="tab-panel">
+      <div class="panel-header">
+        <h2>📚 Histórico de consultas</h2>
+        <button id="btn-limpar-historico" class="btn-ghost">🗑️ Apagar</button>
+      </div>
+      <div id="lista-historico"></div>
+    </section>
+
+    <section id="tab-ranking" class="tab-panel">
+      <div class="panel-header">
+        <h2>🏆 Ranking personalizado</h2>
+      </div>
+
+      <div class="ranking-controls">
+        <label>
+          Para qual idade?
+          <input id="input-idade" type="number" min="3" max="16" value="9">
+          anos
+        </label>
+
+        <label>
+          Ordenar por
+          <select id="select-ordem">
+            <option value="recomendacao">🏆 Recomendação</option>
+            <option value="qualidade">⭐ Qualidade</option>
+            <option value="valores">🧭 Valores</option>
+            <option value="sensivel">🟢 Menos sensível</option>
+            <option value="cristao">✝️ Cristão</option>
+          </select>
+        </label>
+
+        <label class="check">
+          <input id="filtro-sem-alertas" type="checkbox">
+          Só sem alertas
+        </label>
+      </div>
+
+      <div id="lista-ranking"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p class="credit">Feito com carinho para ajudar famílias a escolherem boas histórias 💙</p>
+    <p class="copyright">
+      © <span id="copy-year"></span> Ihcsolutions
+      <span class="dot">·</span>
+      v<span id="app-version">2.2</span>
+    </p>
+  </footer>
 
 </div>
-
-<footer>
-  <p class="credit">Feito com carinho para ajudar famílias a escolherem boas histórias 💙</p>
-  <p class="copyright">
-    © <span id="copy-year"></span> Ihcsolutions
-    <span class="dot">·</span>
-    v<span id="app-version">2.1</span>
-  </p>
-</footer>
 
 <script src="app.js"></script>
 </body>
