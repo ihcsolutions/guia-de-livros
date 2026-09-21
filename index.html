@@ -1,47 +1,248 @@
-/* ============================================================
-   v3.1 — Adições
-   ============================================================ */
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia de Livros — Análise por IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=3.1">
+</head>
+<body>
 
-/* Tag de Religião (rótulo descritivo, não semáforo) */
-.tag-religiao{
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  padding: 5px 12px;
-  border-radius: var(--r-pill);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-  border: 1px solid transparent;
-}
-.tag-religiao.sem     { background: rgba(140,150,180,0.20); color: #4a5470; border-color: rgba(140,150,180,0.35); }
-.tag-religiao.cristao { background: linear-gradient(135deg, #c8f5f0, #8de8df); color: #0a6b60; }
-.tag-religiao.outra   { background: linear-gradient(135deg, #d8e7ff, #a9c8ff); color: #234d8f; }
-.tag-religiao.oculto  { background: linear-gradient(135deg, #e8dcff, #c6b3ff); color: #5c2ea8; }
-.tag-religiao.ambiguo { background: linear-gradient(135deg, #fff3c4, #ffe08a); color: #8a6100; }
+<div class="app">
 
-/* Selo de confiabilidade */
-.confiabilidade{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Baloo 2', sans-serif;
-  font-weight: 700;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: var(--r-pill);
-  margin-bottom: 12px;
-  border: 1px solid transparent;
-}
-.confiabilidade.alta     { background: linear-gradient(135deg, #d4f5e1, #a8e9c4); color: #14703a; }
-.confiabilidade.moderada { background: linear-gradient(135deg, #fff3c4, #ffe08a); color: #8a6100; }
-.confiabilidade.baixa    { background: linear-gradient(135deg, #ffd1d1, #ff9b9b); color: #a02020; }
+  <header class="hero">
+    <div class="hero-topbar">
+      <div class="hero-avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#eef1ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="6" r="2.5"/>
+          <path d="M7 21v-4a5 5 0 0 1 10 0v4"/>
+          <circle cx="4.5" cy="11" r="1.7"/>
+          <path d="M1.5 21v-2.5a3 3 0 0 1 3-3"/>
+          <circle cx="19.5" cy="11" r="1.7"/>
+          <path d="M22.5 21v-2.5a3 3 0 0 0-3-3"/>
+        </svg>
+      </div>
+    </div>
 
-/* Ajustes no Sobre */
-#tab-sobre .card + .card{ margin-top: 16px; }
-#tab-sobre .conclusao{ color: var(--ink-dim); }
-#tab-sobre .conclusao strong{ color: var(--ink); }
+    <div class="hero-content">
+      <div class="badge-top">✨ leitura em família ✨</div>
+      <h1 class="title">Guia de Livros</h1>
+      <p class="subtitle">Análise inteligente de livros infantis para família.</p>
+    </div>
+  </header>
 
-/* Atualizar cabeçalho do arquivo */
+  <div class="wave" aria-hidden="true">
+    <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+      <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" fill="#E6E8F2"/>
+    </svg>
+  </div>
+
+  <main class="app-main">
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="pesquisar">🔎 Pesquisar</button>
+      <button class="tab" data-tab="historico">📚 Histórico</button>
+      <button class="tab" data-tab="ranking">🏆 Ranking</button>
+      <button class="tab" data-tab="sobre">ℹ️ Sobre</button>
+    </nav>
+
+    <section id="tab-pesquisar" class="tab-panel active">
+      <div class="search-box">
+        <h2>Qual livro você quer avaliar?</h2>
+
+        <div class="search-field">
+          <span class="search-icon">📖</span>
+          <input id="input-titulo" type="text" placeholder="Nome do livro...">
+        </div>
+
+        <div class="search-field">
+          <span class="search-icon">✍️</span>
+          <input id="input-autor" type="text" placeholder="Autor (opcional)">
+        </div>
+
+        <button id="btn-analisar" class="btn-primary">🔎 ANALISAR</button>
+        <p id="search-status" class="status"></p>
+      </div>
+
+      <div id="resultado" class="resultado hidden"></div>
+    </section>
+
+    <section id="tab-historico" class="tab-panel">
+      <div class="panel-header">
+        <h2>📚 Histórico de consultas</h2>
+        <button id="btn-limpar-historico" class="btn-ghost">🗑️ Apagar</button>
+      </div>
+      <div id="lista-historico"></div>
+    </section>
+
+    <section id="tab-ranking" class="tab-panel">
+      <div class="panel-header">
+        <h2>🏆 Ranking personalizado</h2>
+      </div>
+
+      <div class="ranking-controls">
+        <label>
+          Para qual idade?
+          <input id="input-idade" type="number" min="3" max="16" value="9">
+          anos
+        </label>
+
+        <label>
+          Ordenar por
+          <select id="select-ordem">
+            <option value="recomendacao">🏆 Recomendação</option>
+            <option value="qualidade">⭐ Qualidade</option>
+            <option value="valores">🧭 Valores</option>
+            <option value="sensivel">🟢 Menos sensível</option>
+            <option value="cristao">✝️ Cristão</option>
+          </select>
+        </label>
+
+        <label class="check">
+          <input id="filtro-sem-alertas" type="checkbox">
+          Só sem alertas
+        </label>
+      </div>
+
+      <div id="lista-ranking"></div>
+    </section>
+
+    <section id="tab-sobre" class="tab-panel">
+      <div class="panel-header">
+        <h2>ℹ️ Sobre este guia</h2>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">📚 O que é</h4>
+        <p class="conclusao">Este guia ajuda famílias a escolherem livros infantis com mais segurança. Cada análise é feita por IA, com base em um guia familiar cristão, e mostra critérios objetivos sobre conteúdo sensível, valores e adequação etária.</p>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">🧭 Como funciona</h4>
+        <p class="conclusao">
+          <strong>1.</strong> Você digita o título (e opcionalmente o autor).<br>
+          <strong>2.</strong> Buscamos informações em fontes públicas (Google Books, Open Library, resenhas, livrarias, catálogos).<br>
+          <strong>3.</strong> A IA lê as evidências e avalia cada critério individualmente.<br>
+          <strong>4.</strong> O resultado é apresentado em cartões, com nota geral, veredito e fontes consultadas.
+        </p>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">⚙️ Confiabilidade da análise</h4>
+        <div class="crit-list">
+          <div class="crit-item">
+            <span class="label">🟢 Alta</span>
+            <span style="color: var(--ink-dim); font-size:13px; text-align:right;">Ficha editorial, sinopse e resenhas de várias fontes</span>
+          </div>
+          <div class="crit-item">
+            <span class="label">🟡 Moderada</span>
+            <span style="color: var(--ink-dim); font-size:13px; text-align:right;">Algumas fontes, mas faltaram dados em critérios importantes</span>
+          </div>
+          <div class="crit-item">
+            <span class="label">🔴 Baixa</span>
+            <span style="color: var(--ink-dim); font-size:13px; text-align:right;">Pouca informação disponível — resultado pode ser incompleto</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">🎯 Critérios visíveis</h4>
+        <div class="crit-list">
+          <div class="crit-item"><span class="label">⚔️ Violência</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Presença de brigas, agressões, armas, ferimentos ou atos violentos na narrativa.</p>
+
+          <div class="crit-item"><span class="label">🗣️ Linguagem</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Palavrões, xingamentos, gírias vulgares, blasfêmias ou tom desrespeitoso.</p>
+
+          <div class="crit-item"><span class="label">🌈 Identidade de Gênero</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Se o livro aborda ou promove discussões sobre identidade de gênero.</p>
+
+          <div class="crit-item"><span class="label">🙏 Religião</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 0;">Que tipo de conteúdo religioso a obra apresenta — é um <strong>rótulo informativo</strong>, não um alerta.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">📖 Critérios adicionais</h4>
+        <p style="font-size:13px; color:var(--ink-dim); margin-bottom:14px;">Ficam dentro do botão <strong>"Saiba mais"</strong> em cada análise.</p>
+        <div class="crit-list">
+          <div class="crit-item"><span class="label">💞 Sexo</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Romance, paquera, beijos, insinuações ou conteúdo sexual.</p>
+
+          <div class="crit-item"><span class="label">😨 Medo / Terror</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Cenas assustadoras, suspense intenso, pesadelos ou ameaças.</p>
+
+          <div class="crit-item"><span class="label">☠️ Morte</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Se a morte aparece, como é tratada e se é central na narrativa.</p>
+
+          <div class="crit-item"><span class="label">😔 Bullying</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Humilhação, perseguição, intimidação ou exclusão entre personagens.</p>
+
+          <div class="crit-item"><span class="label">👨‍👩‍👧 Respeito aos adultos</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Como crianças tratam pais, responsáveis e outros adultos.</p>
+
+          <div class="crit-item"><span class="label">🏛️ Respeito à autoridade</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Como professores, líderes e regras são retratados.</p>
+
+          <div class="crit-item"><span class="label">🎓 Respeito aos professores</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Comportamento dos alunos diante da autoridade escolar.</p>
+
+          <div class="crit-item"><span class="label">📏 Obediência</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Se a obediência é valorizada e a desobediência é tratada como algo positivo.</p>
+
+          <div class="crit-item"><span class="label">🔮 Ocultismo</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Magia, bruxaria, rituais, espíritos ou práticas esotéricas.</p>
+
+          <div class="crit-item"><span class="label">⛪ Oposição ao cristianismo</span></div>
+          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 0;">Se a obra critica, ridiculariza ou ataca a fé cristã.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">🏷️ Legenda dos selos</h4>
+        <div class="crit-list">
+          <div class="crit-item"><span class="label">🟢 Tranquilo</span><span class="badge tranquilo">Sem conteúdo relevante</span></div>
+          <div class="crit-item"><span class="label">🟡 Atenção</span><span class="badge atencao">Pode exigir consideração</span></div>
+          <div class="crit-item"><span class="label">🟠 Sensível</span><span class="badge sensivel">Merece avaliação dos pais</span></div>
+          <div class="crit-item"><span class="label">🔴 Forte</span><span class="badge forte">Conteúdo que pede cautela</span></div>
+          <div class="crit-item"><span class="label">✝️ Cristão explícito</span><span class="badge cristao">Fé e valores cristãos</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">🙏 Legenda da Religião</h4>
+        <p style="font-size:13px; color:var(--ink-dim); margin-bottom:14px;">O campo "Religião" é um <strong>rótulo descritivo</strong> — informa o que o livro apresenta, não é um alerta.</p>
+        <div class="crit-list">
+          <div class="crit-item"><span class="label">⚪ Sem conteúdo religioso</span><span class="tag-religiao sem">Obra secular</span></div>
+          <div class="crit-item"><span class="label">✝️ Cristão explícito</span><span class="tag-religiao cristao">Deus, fé, orações</span></div>
+          <div class="crit-item"><span class="label">📖 Outra religião</span><span class="tag-religiao outra">Outra tradição</span></div>
+          <div class="crit-item"><span class="label">🔮 Ocultismo / misticismo</span><span class="tag-religiao oculto">Magia, rituais</span></div>
+          <div class="crit-item"><span class="label">⚠️ Ambíguo / espiritualista</span><span class="tag-religiao ambiguo">Sem doutrina clara</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4 class="section-title">⚠️ Importante</h4>
+        <p class="conclusao">As análises são um apoio à decisão, não substituem a leitura dos pais. Recomendamos sempre ler o livro junto com a criança, especialmente quando há alertas 🟡 🟠 🔴.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p class="credit">Feito com carinho para ajudar famílias a escolherem boas histórias 💙</p>
+    <p class="copyright">
+      © <span id="copy-year"></span> Ihcsolutions
+      <span class="dot">·</span>
+      v<span id="app-version">3.1</span>
+    </p>
+  </footer>
+
+</div>
+
+<script src="app.js?v=3.1"></script>
+</body>
+</html>
