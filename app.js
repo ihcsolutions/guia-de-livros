@@ -1,11 +1,11 @@
 // ============================================================
-// Guia de Livros — Versão 2.1
+// Guia de Livros — Versão 2.2
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "2.1";
+const APP_VERSION = "2.2";
 
 const CRITERIOS_VISIVEIS = [
   { key: "Violência", icon: "⚔️", label: "Violência" },
