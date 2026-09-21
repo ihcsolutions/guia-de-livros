@@ -7,13 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4.0">
+<link rel="stylesheet" href="style.css?v=4.1">
 </head>
 <body>
 
 <div class="app">
 
   <header class="hero">
+    <button class="btn-sobre" id="btn-sobre" aria-label="Sobre este guia">?</button>
+
     <div class="hero-topbar">
       <div class="hero-avatar" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="#eef1ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -46,7 +48,6 @@
       <button class="tab active" data-tab="pesquisar">🔎 Pesquisar</button>
       <button class="tab" data-tab="historico">📚 Histórico</button>
       <button class="tab" data-tab="ranking">🏆 Ranking</button>
-      <button class="tab" data-tab="sobre">ℹ️ Sobre</button>
     </nav>
 
     <section id="tab-pesquisar" class="tab-panel active">
@@ -110,126 +111,6 @@
       <div id="lista-ranking"></div>
     </section>
 
-    <section id="tab-sobre" class="tab-panel">
-      <div class="panel-header">
-        <h2>ℹ️ Sobre este guia</h2>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">📚 O que é</h4>
-        <p class="conclusao">Este guia ajuda famílias a escolherem livros infantis com mais segurança. Cada análise é feita por IA, com base em um guia familiar cristão, e mostra critérios objetivos sobre conteúdo sensível, valores e adequação etária.</p>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">🧭 Como funciona</h4>
-        <p class="conclusao">
-          <strong>1.</strong> Você digita o título (e opcionalmente o autor).<br>
-          <strong>2.</strong> Buscamos informações em fontes públicas (Google Books, Open Library, resenhas, livrarias, catálogos).<br>
-          <strong>3.</strong> A IA lê as evidências e avalia cada critério individualmente.<br>
-          <strong>4.</strong> O resultado é apresentado em cartões, com nota geral, veredito e fontes consultadas.
-        </p>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">⚙️ Confiabilidade da análise</h4>
-        <div class="crit-list">
-          <div class="crit-item">
-            <span class="label">🟢 Alta</span>
-            <span style="color: var(--ink-dim); font-size:13px; text-align:right;">Ficha editorial, sinopse e resenhas de várias fontes</span>
-          </div>
-          <div class="crit-item">
-            <span class="label">🟡 Moderada</span>
-            <span style="color: var(--ink-dim); font-size:13px; text-align:right;">Algumas fontes, mas faltaram dados em critérios importantes</span>
-          </div>
-          <div class="crit-item">
-            <span class="label">🔴 Baixa</span>
-            <span style="color: var(--ink-dim); font-size:13px; text-align:right;">Pouca informação disponível — resultado pode ser incompleto</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">🎯 Critérios visíveis</h4>
-        <div class="crit-list">
-          <div class="crit-item"><span class="label">⚔️ Violência</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Presença de brigas, agressões, armas, ferimentos ou atos violentos na narrativa.</p>
-
-          <div class="crit-item"><span class="label">🗣️ Linguagem</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Palavrões, xingamentos, gírias vulgares, blasfêmias ou tom desrespeitoso.</p>
-
-          <div class="crit-item"><span class="label">🌈 Identidade de Gênero</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Se o livro aborda ou promove discussões sobre identidade de gênero.</p>
-
-          <div class="crit-item"><span class="label">🙏 Religião</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 0;">Que tipo de conteúdo religioso a obra apresenta — é um <strong>rótulo informativo</strong>, não um alerta.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">📖 Critérios adicionais</h4>
-        <p style="font-size:13px; color:var(--ink-dim); margin-bottom:14px;">Ficam dentro do botão <strong>"Saiba mais"</strong> em cada análise.</p>
-        <div class="crit-list">
-          <div class="crit-item"><span class="label">💞 Sexo</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Romance, paquera, beijos, insinuações ou conteúdo sexual.</p>
-
-          <div class="crit-item"><span class="label">😨 Medo / Terror</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Cenas assustadoras, suspense intenso, pesadelos ou ameaças.</p>
-
-          <div class="crit-item"><span class="label">☠️ Morte</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Se a morte aparece, como é tratada e se é central na narrativa.</p>
-
-          <div class="crit-item"><span class="label">😔 Bullying</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Humilhação, perseguição, intimidação ou exclusão entre personagens.</p>
-
-          <div class="crit-item"><span class="label">👨‍👩‍👧 Respeito aos adultos</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Como crianças tratam pais, responsáveis e outros adultos.</p>
-
-          <div class="crit-item"><span class="label">🏛️ Respeito à autoridade</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Como professores, líderes e regras são retratados.</p>
-
-          <div class="crit-item"><span class="label">🎓 Respeito aos professores</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Comportamento dos alunos diante da autoridade escolar.</p>
-
-          <div class="crit-item"><span class="label">📏 Obediência</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Se a obediência é valorizada e a desobediência é tratada como algo positivo.</p>
-
-          <div class="crit-item"><span class="label">🔮 Ocultismo</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 8px;">Magia, bruxaria, rituais, espíritos ou práticas esotéricas.</p>
-
-          <div class="crit-item"><span class="label">⛪ Oposição ao cristianismo</span></div>
-          <p style="font-size:13px; color:var(--ink-dim); margin:-4px 4px 0;">Se a obra critica, ridiculariza ou ataca a fé cristã.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">🏷️ Legenda dos selos</h4>
-        <div class="crit-list">
-          <div class="crit-item"><span class="label">🟢 Tranquilo</span><span class="badge tranquilo">Sem conteúdo relevante</span></div>
-          <div class="crit-item"><span class="label">🟡 Atenção</span><span class="badge atencao">Pode exigir consideração</span></div>
-          <div class="crit-item"><span class="label">🟠 Sensível</span><span class="badge sensivel">Merece avaliação dos pais</span></div>
-          <div class="crit-item"><span class="label">🔴 Forte</span><span class="badge forte">Conteúdo que pede cautela</span></div>
-          <div class="crit-item"><span class="label">✝️ Cristão explícito</span><span class="badge cristao">Fé e valores cristãos</span></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">🙏 Legenda da Religião</h4>
-        <p style="font-size:13px; color:var(--ink-dim); margin-bottom:14px;">O campo "Religião" é um <strong>rótulo descritivo</strong> — informa o que o livro apresenta, não é um alerta.</p>
-        <div class="crit-list">
-          <div class="crit-item"><span class="label">⚪ Sem conteúdo religioso</span><span class="tag-religiao sem">Obra secular</span></div>
-          <div class="crit-item"><span class="label">✝️ Cristão explícito</span><span class="tag-religiao cristao">Deus, fé, orações</span></div>
-          <div class="crit-item"><span class="label">📖 Outra religião</span><span class="tag-religiao outra">Outra tradição</span></div>
-          <div class="crit-item"><span class="label">🔮 Ocultismo / misticismo</span><span class="tag-religiao oculto">Magia, rituais</span></div>
-          <div class="crit-item"><span class="label">⚠️ Ambíguo / espiritualista</span><span class="tag-religiao ambiguo">Sem doutrina clara</span></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4 class="section-title">⚠️ Importante</h4>
-        <p class="conclusao">As análises são um apoio à decisão, não substituem a leitura dos pais. Recomendamos sempre ler o livro junto com a criança, especialmente quando há alertas 🟡 🟠 🔴.</p>
-      </div>
-    </section>
-
   </main>
 
   <footer>
@@ -237,12 +118,105 @@
     <p class="copyright">
       © <span id="copy-year"></span> Ihcsolutions
       <span class="dot">·</span>
-      v<span id="app-version">4.0</span>
+      v<span id="app-version">4.1</span>
     </p>
   </footer>
 
 </div>
 
-<script src="app.js?v=4.0"></script>
+<!-- ============ MODAL SOBRE ============ -->
+<div class="modal-overlay hidden" id="modal-sobre">
+  <div class="modal-box" role="dialog" aria-labelledby="modal-titulo">
+    <div class="modal-header">
+      <h2 id="modal-titulo">ℹ️ Sobre este guia</h2>
+      <button class="modal-close" id="modal-close" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="modal-body">
+
+      <div class="modal-section">
+        <h3>📚 O que é</h3>
+        <p>Este guia ajuda famílias a escolherem livros infantis com mais segurança. Cada análise é feita por IA, com base em um guia familiar cristão, e mostra critérios objetivos sobre conteúdo sensível, valores e adequação etária.</p>
+      </div>
+
+      <div class="modal-section">
+        <h3>🧭 Como funciona</h3>
+        <p>
+          <strong>1.</strong> Você digita o título (e opcionalmente o autor).<br>
+          <strong>2.</strong> Buscamos informações em fontes públicas (Google Books, Open Library, resenhas, livrarias, catálogos).<br>
+          <strong>3.</strong> A IA lê as evidências e avalia cada critério individualmente.<br>
+          <strong>4.</strong> O resultado é apresentado em cartões, com nota geral, veredito e fontes consultadas.
+        </p>
+      </div>
+
+      <div class="modal-section">
+        <h3>⚙️ Confiabilidade da análise</h3>
+        <div class="crit-list">
+          <div class="crit-item"><div class="crit-main"><span class="label">🟢 Alta</span></div><div class="crit-fonte">Ficha editorial, sinopse e resenhas de várias fontes.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🟡 Moderada</span></div><div class="crit-fonte">Algumas fontes, mas faltaram dados em critérios importantes.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🔴 Baixa</span></div><div class="crit-fonte">Pouca informação disponível — resultado pode ser incompleto.</div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>🎯 Critérios visíveis</h3>
+        <div class="crit-list">
+          <div class="crit-item"><div class="crit-main"><span class="label">⚔️ Violência</span></div><div class="crit-fonte">Brigas, agressões, armas, ferimentos, atos violentos. <strong>Também inclui:</strong> discurso de ódio, racismo, antissemitismo, apologia ao nazismo ou a qualquer forma de discriminação racial ou étnica.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🗣️ Linguagem</span></div><div class="crit-fonte">Palavrões, xingamentos, gírias vulgares, blasfêmias ou tom desrespeitoso.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🌈 Identidade de Gênero</span></div><div class="crit-fonte">Se o livro aborda ou promove discussões sobre identidade de gênero.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🙏 Religião</span></div><div class="crit-fonte">Tipo de conteúdo religioso da obra. É um <strong>rótulo informativo</strong>, não um alerta.</div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>📖 Critérios adicionais</h3>
+        <p class="modal-sub">Ficam dentro do botão <strong>"Saiba mais"</strong> em cada análise.</p>
+        <div class="crit-list">
+          <div class="crit-item"><div class="crit-main"><span class="label">💞 Sexo</span></div><div class="crit-fonte">Romance, paquera, beijos, insinuações ou conteúdo sexual.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">😨 Medo / Terror</span></div><div class="crit-fonte">Cenas assustadoras, suspense intenso, pesadelos ou ameaças.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">☠️ Morte</span></div><div class="crit-fonte">Se a morte aparece, como é tratada e se é central na narrativa.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">😔 Bullying</span></div><div class="crit-fonte">Agressão sistemática: perseguição, humilhação repetida, intimidação ou exclusão. Foco no padrão, não em atitude isolada.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🤝 Respeito</span></div><div class="crit-fonte">Tom e atitude dos personagens uns com os outros: educação, cortesia, sarcasmo, malcriação, tratamento dado a adultos, idosos, autoridades e colegas.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">📏 Obediência</span></div><div class="crit-fonte">Se a obediência é valorizada e a desobediência é tratada como positiva ou engraçada.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🔮 Ocultismo</span></div><div class="crit-fonte">Magia, bruxaria, rituais, espíritos ou práticas esotéricas.</div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">⛪ Oposição ao cristianismo</span></div><div class="crit-fonte">Se a obra critica, ridiculariza ou ataca a fé cristã.</div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>🏷️ Legenda dos selos</h3>
+        <div class="crit-list">
+          <div class="crit-item"><div class="crit-main"><span class="label">🟢 Tranquilo</span><span class="badge tranquilo">Sem conteúdo relevante</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🟡 Atenção</span><span class="badge atencao">Pode exigir consideração</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🟠 Sensível</span><span class="badge sensivel">Merece avaliação dos pais</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🔴 Forte</span><span class="badge forte">Conteúdo que pede cautela</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">✝️ Cristão explícito</span><span class="badge cristao">Fé e valores cristãos</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">⚪ Não identificado</span><span class="badge nao-ident">Sem evidência nas fontes</span></div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>🙏 Legenda da Religião</h3>
+        <p class="modal-sub">O campo "Religião" é um <strong>rótulo descritivo</strong>, não um alerta.</p>
+        <div class="crit-list">
+          <div class="crit-item"><div class="crit-main"><span class="label">⚪ Sem conteúdo religioso</span><span class="tag-religiao sem">Obra secular</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">✝️ Cristão explícito</span><span class="tag-religiao cristao">Deus, fé, orações</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">📖 Outra religião</span><span class="tag-religiao outra">Outra tradição</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">🔮 Ocultismo / misticismo</span><span class="tag-religiao oculto">Magia, rituais</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">⚠️ Ambíguo / espiritualista</span><span class="tag-religiao ambiguo">Sem doutrina clara</span></div></div>
+          <div class="crit-item"><div class="crit-main"><span class="label">⚪ Não identificado</span><span class="tag-religiao nao-ident">Sem dados</span></div></div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h3>⚠️ Importante</h3>
+        <p>As análises são um apoio à decisão, não substituem a leitura dos pais. Recomendamos sempre ler o livro junto com a criança, especialmente quando há alertas 🟡 🟠 🔴.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js?v=4.1"></script>
 </body>
 </html>
