@@ -1,7 +1,7 @@
 /* ============================================================
-   Guia de Livros — v2.9
+   Guia de Livros — v3.0
    Base: v2.2 · Sem caixa "Análise por IA" · Título sólido
-   Header sólido · Ícone família · Wave fundida ao header
+   Header sólido · Ícone família SVG · Onda visível
    ============================================================ */
 
 :root{
@@ -83,10 +83,9 @@ body{
 /* ============ HERO (azul escuro sólido) ============ */
 .hero{
   background: var(--dark-2);
-  padding: 22px 24px 40px;
+  padding: 22px 24px 0;
   color: var(--ink-on-dark);
   position: relative;
-  overflow: hidden;
 }
 
 .hero-topbar{
@@ -103,20 +102,21 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
-  background: linear-gradient(145deg, #2f3a56, #1a2337);
-  border: 1.5px solid rgba(255,255,255,0.16);
-  box-shadow:
-    inset 0 2px 8px rgba(0,0,0,0.35),
-    inset 0 -1px 0 rgba(255,255,255,0.08),
-    0 4px 14px rgba(0,0,0,0.30);
-  color: #ffffff;
+  background: rgba(255,255,255,0.06);
+  border: 1.5px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85);
+}
+
+.hero-avatar svg{
+  width: 28px;
+  height: 28px;
 }
 
 .hero-content{
   text-align: center;
   position: relative;
   z-index: 1;
+  padding-bottom: 20px;
 }
 
 .badge-top{
@@ -147,15 +147,16 @@ h1.title{
 p.subtitle{
   font-size: 15.5px;
   color: var(--ink-on-dark-dim);
-  margin: 0 auto 28px;
+  margin: 0 auto;
   max-width: 480px;
 }
 
-/* Onda S-curve — mesma cor do header, fundida */
+/* Onda S-curve — cor do fundo claro, aparece como entalhe */
 .wave{
   background: var(--dark-2);
   line-height: 0;
   position: relative;
+  margin-bottom: -1px;
 }
 .wave svg{
   display: block;
@@ -914,7 +915,7 @@ footer .copyright #app-version{
 }
 
 @media (max-width: 640px){
-  .hero{ padding: 18px 18px 30px; }
+  .hero{ padding: 18px 18px 0; }
   h1.title{ font-size: 34px; }
   .book-header{ grid-template-columns: 1fr; }
   .cover{ aspect-ratio: 16/9; max-height: 180px; }
