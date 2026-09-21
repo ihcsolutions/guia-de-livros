@@ -872,4 +872,6 @@ footer .copyright #app-version{
   .search-box{ padding: 24px 20px; }
   .search-box h2{ font-size: 20px; }
   .ranking-controls{ padding: 18px; gap: 14px; }
-  .
+  .tabs{ gap: 6px; }
+  .tab{ font-size: 13px; padding: 9px 16px; }
+}
