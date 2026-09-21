@@ -1,46 +1,51 @@
 /* ============================================================
-   Guia de Livros — v2.4
+   Guia de Livros — v2.5
    Elegância · Sofisticação · Seriedade
-   Base: v2.2 · Gradientes suavizados · Onda única
+   Base: v2.4 · Onda S visível
    ============================================================ */
 
 :root{
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Fundos */
-  --bg-1: #0c1330;
-  --bg-2: #101a40;
+  /* Fundo da página (fora do hero) */
+  --page-bg: #E6E8F2;
+  --page-bg-2: #ECEEF6;
+
+  /* Hero (topo) */
+  --hero-bg-1: #0c1330;
+  --hero-bg-2: #131d47;
+  --hero-bg-3: #16204a;
+
+  /* Cards */
   --card: #16204a;
   --card-edge: rgba(255,255,255,0.10);
-  --card-edge-strong: rgba(255,255,255,0.16);
+  --card-edge-strong: rgba(255,255,255,0.14);
 
   /* Ink */
   --ink: #eef1ff;
   --ink-dim: #b8c1e3;
   --ink-soft: #cfd6f0;
+  --ink-on-light: #1a2039;
+  --ink-on-light-dim: #58638a;
 
-  /* Inputs (cor areia clara — legível) */
+  /* Inputs */
   --input-bg: #F0EDE4;
   --input-ink: #0c1330;
 
   /* Acentos */
-  --coral: #ff7b54;
-  --coral2: #ffb26b;
   --sky: #3aacff;
   --sky2: #7fdcff;
   --mint: #33d17a;
   --mint2: #9bffb0;
   --gold: #d4a340;
   --gold-soft: #e8c176;
-  --berry: #ff5c8a;
-  --berry2: #ff9fc0;
-  --violet: #9b7bff;
-  --violet2: #c6b3ff;
-  --teal: #17c3b2;
-  --teal2: #7be8dc;
+  --gold2: #ffe08a;
+  --coral: #ff7b54;
+  --coral2: #ffb26b;
   --red: #ff5a5f;
   --yellow: #ffd23f;
   --green: #35d07f;
+  --teal2: #7be8dc;
 
   /* Raios */
   --r-sm: 12px;
@@ -55,11 +60,9 @@ html, body{ min-height: 100%; }
 
 body{
   font-family: 'Nunito', sans-serif;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(58,172,255,0.06), transparent 50%),
-    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  background: linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-2) 100%);
   background-attachment: fixed;
-  color: var(--ink);
+  color: var(--ink-on-light);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
@@ -71,14 +74,18 @@ body{
 }
 
 /* ============================================================
-   HERO
+   HERO + ONDA
    ============================================================ */
+.hero-wrap{
+  position: relative;
+}
+
 .hero{
   background:
-    radial-gradient(circle at 20% 0%, rgba(58,172,255,0.10), transparent 55%),
-    radial-gradient(circle at 80% 30%, rgba(155,123,255,0.06), transparent 55%),
-    linear-gradient(170deg, #0c1330 0%, #131d47 60%, #16204a 100%);
-  padding: 22px 24px 0;
+    radial-gradient(circle at 20% 0%, rgba(58,172,255,0.12), transparent 55%),
+    radial-gradient(circle at 80% 30%, rgba(155,123,255,0.08), transparent 55%),
+    linear-gradient(170deg, var(--hero-bg-1) 0%, var(--hero-bg-2) 60%, var(--hero-bg-3) 100%);
+  padding: 22px 24px 20px;
   position: relative;
 }
 
@@ -86,7 +93,7 @@ body{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 44px;
 }
 
 .icon-circle{
@@ -123,7 +130,7 @@ body{
 
 .hero-content{
   text-align: center;
-  padding: 20px 0 60px;
+  padding: 20px 0 40px;
 }
 
 .badge-top{
@@ -165,16 +172,22 @@ p.subtitle{
   letter-spacing: 0.1px;
 }
 
-/* Onda única S — divisória sutil */
+/* ============================================================
+   ONDA S — divisória entre hero e fundo claro
+   ============================================================ */
 .wave{
-  position: relative;
-  margin-top: -2px;
+  display: block;
+  width: 100%;
   line-height: 0;
+  margin-top: -1px;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
 }
 .wave svg{
   display: block;
   width: 100%;
-  height: 60px;
+  height: 80px;
 }
 
 /* ============================================================
@@ -182,6 +195,8 @@ p.subtitle{
    ============================================================ */
 .app-main{
   padding: 0 22px 30px;
+  position: relative;
+  z-index: 1;
 }
 
 /* Tabs */
@@ -189,8 +204,10 @@ p.subtitle{
   display: flex;
   gap: 8px;
   justify-content: center;
-  margin: 4px 0 28px;
+  margin: -32px 0 28px;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 3;
 }
 
 .tab{
@@ -198,26 +215,28 @@ p.subtitle{
   font-weight: 600;
   font-size: 14px;
   color: var(--ink-dim);
-  background: rgba(255,255,255,0.05);
+  background: rgba(22,32,74,0.92);
   border: 1px solid rgba(255,255,255,0.10);
-  padding: 10px 20px;
+  padding: 11px 22px;
   border-radius: var(--r-pill);
   cursor: pointer;
   transition: all 0.15s;
   letter-spacing: 0.2px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .tab:hover{
   color: var(--ink);
-  background: rgba(255,255,255,0.08);
-  border-color: rgba(255,255,255,0.16);
+  background: rgba(22,32,74,1);
+  border-color: rgba(255,255,255,0.18);
 }
 
 .tab.active{
   background: linear-gradient(135deg, var(--sky), #5a8cff);
   color: #ffffff;
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(58,172,255,0.25);
+  box-shadow: 0 4px 14px rgba(58,172,255,0.30);
 }
 
 .tab-panel{ display: none; }
@@ -244,7 +263,6 @@ p.subtitle{
   letter-spacing: -0.2px;
 }
 
-/* Inputs — fundo areia, texto escuro (legibilidade máxima) */
 .search-field{
   display: flex;
   align-items: center;
@@ -287,7 +305,6 @@ p.subtitle{
   font-weight: 500;
 }
 
-/* Botão — dourado sóbrio, sem gradiente chamativo */
 .btn-primary{
   font-family: 'Baloo 2', sans-serif;
   font-weight: 700;
@@ -685,9 +702,10 @@ p.subtitle{
   padding: 56px 20px;
   color: var(--ink-dim);
   font-size: 14px;
-  background: rgba(255,255,255,0.03);
-  border: 1px dashed rgba(255,255,255,0.12);
+  background: var(--card);
+  border: 1px dashed rgba(255,255,255,0.14);
   border-radius: var(--r-lg);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
 }
 
 .empty-state strong{ color: var(--sky2); font-weight: 700; }
@@ -825,14 +843,14 @@ p.subtitle{
 footer{
   text-align: center;
   padding: 40px 20px 30px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid rgba(26,32,57,0.10);
   margin-top: 20px;
 }
 
 footer .credit{
   margin-bottom: 8px;
   font-size: 13px;
-  color: var(--ink-dim);
+  color: var(--ink-on-light-dim);
   font-weight: 500;
 }
 
@@ -841,16 +859,16 @@ footer .copyright{
   font-weight: 600;
   font-size: 12.5px;
   letter-spacing: 0.4px;
-  color: rgba(255,255,255,0.42);
+  color: var(--ink-on-light-dim);
 }
 
 footer .copyright .dot{
   margin: 0 8px;
-  color: var(--sky2);
+  color: var(--sky);
 }
 
 footer .copyright #app-version{
-  color: var(--sky2);
+  color: var(--sky);
   font-weight: 800;
 }
 
@@ -858,20 +876,15 @@ footer .copyright #app-version{
    RESPONSIVO
    ============================================================ */
 @media (max-width: 640px){
-  .hero{ padding: 18px 18px 0; }
+  .hero{ padding: 18px 18px 16px; }
   h1.title{ font-size: 38px; }
   p.subtitle{ font-size: 14.5px; }
-  .hero-content{ padding: 14px 0 40px; }
+  .hero-content{ padding: 14px 0 32px; }
+  .wave svg{ height: 55px; }
+  .tabs{ margin-top: -22px; }
   .book-header{ grid-template-columns: 1fr; }
   .cover{ aspect-ratio: 16/9; max-height: 180px; }
   .score-box{ flex-direction: column; align-items: flex-start; }
   .score-num{ font-size: 42px; }
   .livro-item{ flex-direction: column; align-items: stretch; }
-  .livro-item .acoes{ justify-content: flex-end; }
-  .panel-header h2{ font-size: 20px; }
-  .search-box{ padding: 24px 20px; }
-  .search-box h2{ font-size: 20px; }
-  .ranking-controls{ padding: 18px; gap: 14px; }
-  .tabs{ gap: 6px; }
-  .tab{ font-size: 13px; padding: 9px 16px; }
-}
+  .livro-item .acoes{ justify
