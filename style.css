@@ -1,7 +1,9 @@
 /* ============================================================
-   Guia de Livros — v2.8
+   Guia de Livros — v2.9
    Base: v2.2 · Sem caixa "Análise por IA" · Título sólido
+   Header sólido · Ícone família · Wave fundida ao header
    ============================================================ */
+
 :root{
   color-scheme: light;
 
@@ -78,13 +80,9 @@ body{
   padding: 0 0 20px;
 }
 
-/* ============ HERO (escuro) ============ */
+/* ============ HERO (azul escuro sólido) ============ */
 .hero{
-  background:
-    radial-gradient(circle at 20% 0%, rgba(155,123,255,0.35), transparent 55%),
-    radial-gradient(circle at 90% 20%, rgba(77,200,255,0.30), transparent 55%),
-    radial-gradient(circle at 50% 100%, rgba(255,92,138,0.18), transparent 60%),
-    linear-gradient(160deg, var(--dark-1) 0%, var(--dark-2) 100%);
+  background: var(--dark-2);
   padding: 22px 24px 40px;
   color: var(--ink-on-dark);
   position: relative;
@@ -93,48 +91,25 @@ body{
 
 .hero-topbar{
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-bottom: 30px;
 }
 
-.icon-circle{
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: linear-gradient(145deg, rgba(255,255,255,0.10), rgba(255,255,255,0.03));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: var(--ink-on-dark);
-  font-size: 17px;
-  cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.15),
-    0 4px 12px rgba(0,0,0,0.35);
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.icon-circle:hover{
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 6px 16px rgba(0,0,0,0.45);
-}
-
 .hero-avatar{
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  background: linear-gradient(145deg, #354060, #1a2337);
+  font-size: 26px;
+  background: linear-gradient(145deg, #2f3a56, #1a2337);
   border: 1.5px solid rgba(255,255,255,0.16);
   box-shadow:
-    inset 0 2px 8px rgba(0,0,0,0.4),
-    inset 0 -1px 0 rgba(255,255,255,0.10),
-    0 0 24px rgba(155,123,255,0.35);
+    inset 0 2px 8px rgba(0,0,0,0.35),
+    inset 0 -1px 0 rgba(255,255,255,0.08),
+    0 4px 14px rgba(0,0,0,0.30);
   color: #ffffff;
 }
 
@@ -176,7 +151,7 @@ p.subtitle{
   max-width: 480px;
 }
 
-/* Onda S-curve */
+/* Onda S-curve — mesma cor do header, fundida */
 .wave{
   background: var(--dark-2);
   line-height: 0;
