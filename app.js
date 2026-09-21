@@ -1,11 +1,11 @@
 // ============================================================
-// Guia de Livros — Versão 2.6
+// Guia de Livros — Versão 2.7
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "2.6";
+const APP_VERSION = "2.7";
 
 // ---------- Configuração de critérios ----------
 const CRITERIOS_VISIVEIS = [
