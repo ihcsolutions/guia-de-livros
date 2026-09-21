@@ -1,7 +1,6 @@
 /* ============================================================
-   Guia de Livros — v3.0
-   Base: v2.2 · Sem caixa "Análise por IA" · Título sólido
-   Header sólido · Ícone família SVG · Onda visível
+   Guia de Livros — v3.1
+   Base: v3.0 + Aba Sobre + Religião descritiva + Confiabilidade
    ============================================================ */
 
 :root{
@@ -80,7 +79,7 @@ body{
   padding: 0 0 20px;
 }
 
-/* ============ HERO (azul escuro sólido) ============ */
+/* ============ HERO ============ */
 .hero{
   background: var(--dark-2);
   padding: 22px 24px 0;
@@ -96,20 +95,22 @@ body{
 }
 
 .hero-avatar{
-  width: 52px;
-  height: 52px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255,255,255,0.06);
-  border: 1.5px solid rgba(255,255,255,0.18);
-  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.20);
+  color: #eef1ff;
 }
 
 .hero-avatar svg{
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+  display: block;
+  stroke: #eef1ff;
 }
 
 .hero-content{
@@ -151,7 +152,7 @@ p.subtitle{
   max-width: 480px;
 }
 
-/* Onda S-curve — cor do fundo claro, aparece como entalhe */
+/* Onda S-curve */
 .wave{
   background: var(--dark-2);
   line-height: 0;
@@ -164,7 +165,7 @@ p.subtitle{
   height: 110px;
 }
 
-/* ============ MAIN (claro) ============ */
+/* ============ MAIN ============ */
 .app-main{
   padding: 0 22px 30px;
   position: relative;
@@ -914,6 +915,54 @@ footer .copyright #app-version{
   font-weight: 800;
 }
 
+/* ============================================================
+   v3.1 — Adições
+   ============================================================ */
+
+/* Tag de Religião (rótulo descritivo, não semáforo) */
+.tag-religiao{
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  border: 1px solid transparent;
+}
+.tag-religiao.sem     { background: rgba(140,150,180,0.20); color: #4a5470; border-color: rgba(140,150,180,0.35); }
+.tag-religiao.cristao { background: linear-gradient(135deg, #c8f5f0, #8de8df); color: #0a6b60; }
+.tag-religiao.outra   { background: linear-gradient(135deg, #d8e7ff, #a9c8ff); color: #234d8f; }
+.tag-religiao.oculto  { background: linear-gradient(135deg, #e8dcff, #c6b3ff); color: #5c2ea8; }
+.tag-religiao.ambiguo { background: linear-gradient(135deg, #fff3c4, #ffe08a); color: #8a6100; }
+
+/* Selo de confiabilidade */
+.confiabilidade{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  margin-bottom: 12px;
+  border: 1px solid transparent;
+}
+.confiabilidade.alta     { background: linear-gradient(135deg, #d4f5e1, #a8e9c4); color: #14703a; }
+.confiabilidade.moderada { background: linear-gradient(135deg, #fff3c4, #ffe08a); color: #8a6100; }
+.confiabilidade.baixa    { background: linear-gradient(135deg, #ffd1d1, #ff9b9b); color: #a02020; }
+
+/* Ajustes da aba Sobre */
+#tab-sobre .card + .card{ margin-top: 0; }
+#tab-sobre .conclusao{ color: var(--ink-dim); }
+#tab-sobre .conclusao strong{ color: var(--ink); font-weight: 700; }
+#tab-sobre .crit-item + p{ margin-top: -2px; }
+
+/* Responsivo */
 @media (max-width: 640px){
   .hero{ padding: 18px 18px 0; }
   h1.title{ font-size: 34px; }
