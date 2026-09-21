@@ -1,18 +1,18 @@
 // ============================================================
-// Guia de Livros — Versão 3.1
+// Guia de Livros — Versão 3.2
+// Fase 1: estado "nao_identificado" + fontesPorCriterio
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "3.1";
+const APP_VERSION = "3.2";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
   { key: "Violência", icon: "⚔️", label: "Violência" },
   { key: "Linguagem", icon: "🗣️", label: "Linguagem" },
   { key: "Identidade de Gênero", icon: "🌈", label: "Identidade de Gênero" }
-  // Religião não entra aqui — é tratada separadamente como rótulo
 ];
 
 // ---------- Critérios adicionais ----------
@@ -29,19 +29,27 @@ const CRITERIOS_ADICIONAIS = [
   { key: "Oposição ao cristianismo", icon: "⛪", label: "Oposição ao cristianismo" }
 ];
 
-// ---------- Mapa dos rótulos de Religião ----------
+// ---------- Rótulos de Religião ----------
 const RELIGIAO_LABELS = {
-  sem_conteudo: { icon: "⚪", texto: "Sem conteúdo religioso", classe: "sem" },
-  cristao:      { icon: "✝️", texto: "Cristão explícito",       classe: "cristao" },
-  outra:        { icon: "📖", texto: "Outra religião",          classe: "outra" },
-  ocultismo:    { icon: "🔮", texto: "Ocultismo / misticismo",  classe: "oculto" },
-  ambiguo:      { icon: "⚠️", texto: "Ambíguo / espiritualista", classe: "ambiguo" }
+  sem_conteudo:      { icon: "⚪", texto: "Sem conteúdo religioso",  classe: "sem" },
+  cristao:           { icon: "✝️", texto: "Cristão explícito",        classe: "cristao" },
+  outra:             { icon: "📖", texto: "Outra religião",           classe: "outra" },
+  ocultismo:         { icon: "🔮", texto: "Ocultismo / misticismo",   classe: "oculto" },
+  ambiguo:           { icon: "⚠️", texto: "Ambíguo / espiritualista", classe: "ambiguo" },
+  nao_identificado:  { icon: "⚪", texto: "Não identificado",         classe: "nao-ident" }
 };
 
 // ---------- Helpers ----------
 function badgeClass(nivel){
-  const map = { tranquilo:"tranquilo", atencao:"atencao", sensivel:"sensivel", forte:"forte", cristao:"cristao" };
-  return map[nivel] || "tranquilo";
+  const map = {
+    tranquilo: "tranquilo",
+    atencao: "atencao",
+    sensivel: "sensivel",
+    forte: "forte",
+    cristao: "cristao",
+    nao_identificado: "nao-ident"
+  };
+  return map[nivel] || "nao-ident";
 }
 function badgeLabel(nivel){
   const map = {
@@ -49,7 +57,8 @@ function badgeLabel(nivel){
     atencao:   "🟡 Atenção",
     sensivel:  "🟠 Sensível",
     forte:     "🔴 Forte",
-    cristao:   "✝️ Cristão explícito"
+    cristao:   "✝️ Cristão explícito",
+    nao_identificado: "⚪ Não identificado"
   };
   return map[nivel] || nivel;
 }
@@ -108,6 +117,7 @@ function renderAnalise(a){
     : "📖";
 
   const criterios = a.criterios || {};
+  const fontesPorCriterio = a.fontesPorCriterio || {};
 
   // Confiabilidade
   const conf = a.confiabilidade || "moderada";
@@ -117,41 +127,41 @@ function renderAnalise(a){
     baixa: "🔴 Confiabilidade baixa"
   }[conf] || "🟡 Confiabilidade moderada";
 
-  // Religião (rótulo descritivo)
-  const rel = a.religiao || { tipo: "sem_conteudo", descricao: "" };
-  const relLabel = RELIGIAO_LABELS[rel.tipo] || RELIGIAO_LABELS.sem_conteudo;
+  // Religião
+  const rel = a.religiao || { tipo: "nao_identificado", descricao: "" };
+  const relLabel = RELIGIAO_LABELS[rel.tipo] || RELIGIAO_LABELS.nao_identificado;
 
-  // Critérios visíveis
-  const visiveisHTML = CRITERIOS_VISIVEIS.map(c => {
-    const nivel = criterios[c.key] || "tranquilo";
+  // Função para montar cada critério com fonte opcional
+  function renderCrit(c){
+    const nivel = criterios[c.key] || "nao_identificado";
+    const fonte = fontesPorCriterio[c.key];
     return `
       <div class="crit-item">
-        <span class="label">${c.icon} ${esc(c.label)}</span>
-        <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
+        <div class="crit-main">
+          <span class="label">${c.icon} ${esc(c.label)}</span>
+          <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
+        </div>
+        ${fonte ? `<div class="crit-fonte">📎 ${esc(fonte)}</div>` : ""}
       </div>`;
-  }).join("");
+  }
 
-  // Religião (rótulo)
+  const visiveisHTML = CRITERIOS_VISIVEIS.map(renderCrit).join("");
+
   const religiaoHTML = `
     <div class="crit-item">
-      <span class="label">🙏 Religião</span>
-      <span class="tag-religiao ${relLabel.classe}">${relLabel.icon} ${esc(relLabel.texto)}</span>
+      <div class="crit-main">
+        <span class="label">🙏 Religião</span>
+        <span class="tag-religiao ${relLabel.classe}">${relLabel.icon} ${esc(relLabel.texto)}</span>
+      </div>
+      ${rel.descricao ? `<div class="crit-fonte">${esc(rel.descricao)}</div>` : ""}
+      ${rel.fonte ? `<div class="crit-fonte">📎 ${esc(rel.fonte)}</div>` : ""}
     </div>
-    ${rel.descricao ? `<p style="font-size:12.5px; color:var(--ink-dim); margin:6px 4px 0;">${esc(rel.descricao)}</p>` : ""}
   `;
 
-  // Critérios adicionais
-  const adicionaisHTML = CRITERIOS_ADICIONAIS.map(c => {
-    const nivel = criterios[c.key] || "tranquilo";
-    return `
-      <div class="crit-item">
-        <span class="label">${c.icon} ${esc(c.label)}</span>
-        <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
-      </div>`;
-  }).join("");
+  const adicionaisHTML = CRITERIOS_ADICIONAIS.map(renderCrit).join("");
 
   const fontesHTML = (a.fontes || []).length
-    ? `<p class="fontes"><strong>Fontes:</strong> ${
+    ? `<p class="fontes"><strong>Fontes consultadas:</strong> ${
         a.fontes.map(f => f.url
           ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.nome)}</a>`
           : esc(f.nome)
@@ -242,7 +252,6 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ titulo, autor })
     });
-
     if (!resp.ok) throw new Error("Erro na análise: " + resp.status);
     const analise = await resp.json();
     if (analise.erro) throw new Error(analise.erro);
@@ -252,7 +261,6 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
     renderHistorico();
     renderRanking();
 
-    // Limpar campos após sucesso
     inputTitulo.value = "";
     inputAutor.value = "";
 
@@ -314,10 +322,8 @@ document.getElementById("btn-limpar-historico").addEventListener("click", () => 
 // ---------- Ranking ----------
 function compatibilidadeIdade(idade, faixa){
   if (!faixa) return { texto: "Faixa desconhecida", nivel: "atencao", score: 0 };
-
   const nums = String(faixa).match(/\d+/g);
   if (!nums) return { texto: "Faixa desconhecida", nivel: "atencao", score: 0 };
-
   const min = parseInt(nums[0], 10);
   const max = nums[1] ? parseInt(nums[1], 10) : min + 4;
 
