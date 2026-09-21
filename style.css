@@ -974,3 +974,38 @@ footer .copyright #app-version{
   .tabs{ margin-top: -14px; }
   .tab{ font-size: 13px; padding: 10px 16px; }
 }
+/* ============================================================
+   v3.2 — Adições: nao_identificado + fontes por critério
+   ============================================================ */
+
+/* Selo cinza: não identificado */
+.badge.nao-ident{
+  background: rgba(140,150,180,0.20);
+  color: #4a5470;
+  border: 1px solid rgba(140,150,180,0.35);
+}
+.tag-religiao.nao-ident{
+  background: rgba(140,150,180,0.20);
+  color: #4a5470;
+  border-color: rgba(140,150,180,0.35);
+}
+
+/* Novo layout de critério (label + badge na linha, fonte abaixo) */
+.crit-item{
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+.crit-main{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.crit-fonte{
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  font-style: italic;
+  padding-left: 4px;
+  line-height: 1.4;
+}
