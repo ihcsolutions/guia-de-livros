@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 4.1
+// Guia de Livros — Versão 4.2
 // Modal Sobre + Respeito fundido + Violência com discriminação
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "4.1";
+const APP_VERSION = "4.2";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
