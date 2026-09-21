@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 4.0
-// Tavily + Cloudflare AI Search + Animação de espera
+// Guia de Livros — Versão 4.1
+// Modal Sobre + Respeito fundido + Violência com discriminação
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "4.0";
+const APP_VERSION = "4.1";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
@@ -15,21 +15,18 @@ const CRITERIOS_VISIVEIS = [
   { key: "Identidade de Gênero", icon: "🌈", label: "Identidade de Gênero" }
 ];
 
-// ---------- Critérios adicionais ----------
+// ---------- Critérios adicionais (agora 8, com Respeito fundido) ----------
 const CRITERIOS_ADICIONAIS = [
   { key: "Sexo", icon: "💞", label: "Sexo" },
   { key: "Medo/Terror", icon: "😨", label: "Medo / Terror" },
   { key: "Morte", icon: "☠️", label: "Morte" },
   { key: "Bullying", icon: "😔", label: "Bullying" },
-  { key: "Respeito aos adultos", icon: "👨‍👩‍👧", label: "Respeito aos adultos" },
-  { key: "Respeito à autoridade", icon: "🏛️", label: "Respeito à autoridade" },
-  { key: "Respeito aos professores", icon: "🎓", label: "Respeito aos professores" },
+  { key: "Respeito", icon: "🤝", label: "Respeito" },
   { key: "Obediência", icon: "📏", label: "Obediência" },
   { key: "Ocultismo", icon: "🔮", label: "Ocultismo" },
   { key: "Oposição ao cristianismo", icon: "⛪", label: "Oposição ao cristianismo" }
 ];
 
-// ---------- Rótulos de Religião ----------
 const RELIGIAO_LABELS = {
   sem_conteudo:      { icon: "⚪", texto: "Sem conteúdo religioso",    classe: "sem" },
   cristao:           { icon: "✝️", texto: "Cristão explícito",          classe: "cristao" },
@@ -41,14 +38,7 @@ const RELIGIAO_LABELS = {
 
 // ---------- Helpers ----------
 function badgeClass(nivel){
-  const map = {
-    tranquilo: "tranquilo",
-    atencao: "atencao",
-    sensivel: "sensivel",
-    forte: "forte",
-    cristao: "cristao",
-    nao_identificado: "nao-ident"
-  };
+  const map = { tranquilo:"tranquilo", atencao:"atencao", sensivel:"sensivel", forte:"forte", cristao:"cristao", nao_identificado:"nao-ident" };
   return map[nivel] || "nao-ident";
 }
 function badgeLabel(nivel){
@@ -80,6 +70,24 @@ document.querySelectorAll(".tab").forEach(btn => {
     document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
   });
 });
+
+// ---------- Modal Sobre ----------
+const modal = document.getElementById("modal-sobre");
+document.getElementById("btn-sobre").addEventListener("click", () => {
+  modal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+});
+document.getElementById("modal-close").addEventListener("click", fecharModal);
+modal.addEventListener("click", (e) => {
+  if (e.target === modal) fecharModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modal.classList.contains("hidden")) fecharModal();
+});
+function fecharModal(){
+  modal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
 
 // ---------- Histórico ----------
 function getHistorico(){
@@ -235,12 +243,8 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
   const status = document.getElementById("search-status");
   const btn    = document.getElementById("btn-analisar");
 
-  if (!titulo){
-    status.textContent = "⚠️ Digite o nome do livro.";
-    return;
-  }
+  if (!titulo){ status.textContent = "⚠️ Digite o nome do livro."; return; }
 
-  // --- Animação de espera com etapas ---
   const etapas = [
     "🔎 Buscando o livro...",
     "📚 Procurando resenhas e sinopses...",
@@ -416,7 +420,6 @@ document.getElementById("filtro-sem-alertas").addEventListener("change", renderR
 renderHistorico();
 renderRanking();
 
-// ---------- Footer: versão e ano ----------
 (function(){
   const elVer = document.getElementById("app-version");
   if (elVer) elVer.textContent = APP_VERSION;
