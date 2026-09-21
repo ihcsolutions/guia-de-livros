@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 3.2
-// Fase 1: estado "nao_identificado" + fontesPorCriterio
+// Guia de Livros — Versão 4.0
+// Tavily + Cloudflare AI Search + Animação de espera
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "3.2";
+const APP_VERSION = "4.0";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
@@ -31,12 +31,12 @@ const CRITERIOS_ADICIONAIS = [
 
 // ---------- Rótulos de Religião ----------
 const RELIGIAO_LABELS = {
-  sem_conteudo:      { icon: "⚪", texto: "Sem conteúdo religioso",  classe: "sem" },
-  cristao:           { icon: "✝️", texto: "Cristão explícito",        classe: "cristao" },
-  outra:             { icon: "📖", texto: "Outra religião",           classe: "outra" },
-  ocultismo:         { icon: "🔮", texto: "Ocultismo / misticismo",   classe: "oculto" },
-  ambiguo:           { icon: "⚠️", texto: "Ambíguo / espiritualista", classe: "ambiguo" },
-  nao_identificado:  { icon: "⚪", texto: "Não identificado",         classe: "nao-ident" }
+  sem_conteudo:      { icon: "⚪", texto: "Sem conteúdo religioso",    classe: "sem" },
+  cristao:           { icon: "✝️", texto: "Cristão explícito",          classe: "cristao" },
+  outra:             { icon: "📖", texto: "Outra religião",             classe: "outra" },
+  ocultismo:         { icon: "🔮", texto: "Ocultismo / misticismo",     classe: "oculto" },
+  ambiguo:           { icon: "⚠️", texto: "Ambíguo / espiritualista",   classe: "ambiguo" },
+  nao_identificado:  { icon: "⚪", texto: "Não identificado",           classe: "nao-ident" }
 };
 
 // ---------- Helpers ----------
@@ -119,7 +119,6 @@ function renderAnalise(a){
   const criterios = a.criterios || {};
   const fontesPorCriterio = a.fontesPorCriterio || {};
 
-  // Confiabilidade
   const conf = a.confiabilidade || "moderada";
   const confTexto = {
     alta: "🟢 Confiabilidade alta",
@@ -127,11 +126,9 @@ function renderAnalise(a){
     baixa: "🔴 Confiabilidade baixa"
   }[conf] || "🟡 Confiabilidade moderada";
 
-  // Religião
   const rel = a.religiao || { tipo: "nao_identificado", descricao: "" };
   const relLabel = RELIGIAO_LABELS[rel.tipo] || RELIGIAO_LABELS.nao_identificado;
 
-  // Função para montar cada critério com fonte opcional
   function renderCrit(c){
     const nivel = criterios[c.key] || "nao_identificado";
     const fonte = fontesPorCriterio[c.key];
@@ -243,8 +240,22 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
     return;
   }
 
+  // --- Animação de espera com etapas ---
+  const etapas = [
+    "🔎 Buscando o livro...",
+    "📚 Procurando resenhas e sinopses...",
+    "🧠 Lendo avaliações e analisando critérios...",
+    "✍️ Preparando seu relatório final...",
+    "📊 Organizando os resultados..."
+  ];
+  let etapaAtual = 0;
+  status.innerHTML = `<span class="loading-etapa">${etapas[0]}</span>`;
+  const ticker = setInterval(() => {
+    etapaAtual = (etapaAtual + 1) % etapas.length;
+    status.innerHTML = `<span class="loading-etapa">${etapas[etapaAtual]}</span>`;
+  }, 6000);
+
   btn.disabled = true;
-  status.textContent = "🔎 Buscando informações e analisando...";
 
   try {
     const resp = await fetch(WORKER_URL, {
@@ -269,6 +280,7 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
     console.error(err);
     status.textContent = "❌ " + err.message;
   } finally {
+    clearInterval(ticker);
     btn.disabled = false;
   }
 });
