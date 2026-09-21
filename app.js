@@ -1,24 +1,25 @@
 // ============================================================
-// Guia de Livros — Versão 3.0
+// Guia de Livros — Versão 3.1
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "3.0";
+const APP_VERSION = "3.1";
 
-// ---------- Configuração de critérios ----------
+// ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
   { key: "Violência", icon: "⚔️", label: "Violência" },
-  { key: "Sexo", icon: "💞", label: "Sexo" },
-  { key: "Identidade de Gênero", icon: "🌈", label: "Identidade de Gênero" },
-  { key: "Religião", icon: "🙏", label: "Religião" }
+  { key: "Linguagem", icon: "🗣️", label: "Linguagem" },
+  { key: "Identidade de Gênero", icon: "🌈", label: "Identidade de Gênero" }
+  // Religião não entra aqui — é tratada separadamente como rótulo
 ];
 
+// ---------- Critérios adicionais ----------
 const CRITERIOS_ADICIONAIS = [
+  { key: "Sexo", icon: "💞", label: "Sexo" },
   { key: "Medo/Terror", icon: "😨", label: "Medo / Terror" },
   { key: "Morte", icon: "☠️", label: "Morte" },
-  { key: "Linguagem", icon: "🗣️", label: "Linguagem" },
   { key: "Bullying", icon: "😔", label: "Bullying" },
   { key: "Respeito aos adultos", icon: "👨‍👩‍👧", label: "Respeito aos adultos" },
   { key: "Respeito à autoridade", icon: "🏛️", label: "Respeito à autoridade" },
@@ -27,6 +28,15 @@ const CRITERIOS_ADICIONAIS = [
   { key: "Ocultismo", icon: "🔮", label: "Ocultismo" },
   { key: "Oposição ao cristianismo", icon: "⛪", label: "Oposição ao cristianismo" }
 ];
+
+// ---------- Mapa dos rótulos de Religião ----------
+const RELIGIAO_LABELS = {
+  sem_conteudo: { icon: "⚪", texto: "Sem conteúdo religioso", classe: "sem" },
+  cristao:      { icon: "✝️", texto: "Cristão explícito",       classe: "cristao" },
+  outra:        { icon: "📖", texto: "Outra religião",          classe: "outra" },
+  ocultismo:    { icon: "🔮", texto: "Ocultismo / misticismo",  classe: "oculto" },
+  ambiguo:      { icon: "⚠️", texto: "Ambíguo / espiritualista", classe: "ambiguo" }
+};
 
 // ---------- Helpers ----------
 function badgeClass(nivel){
@@ -99,6 +109,19 @@ function renderAnalise(a){
 
   const criterios = a.criterios || {};
 
+  // Confiabilidade
+  const conf = a.confiabilidade || "moderada";
+  const confTexto = {
+    alta: "🟢 Confiabilidade alta",
+    moderada: "🟡 Confiabilidade moderada",
+    baixa: "🔴 Confiabilidade baixa"
+  }[conf] || "🟡 Confiabilidade moderada";
+
+  // Religião (rótulo descritivo)
+  const rel = a.religiao || { tipo: "sem_conteudo", descricao: "" };
+  const relLabel = RELIGIAO_LABELS[rel.tipo] || RELIGIAO_LABELS.sem_conteudo;
+
+  // Critérios visíveis
   const visiveisHTML = CRITERIOS_VISIVEIS.map(c => {
     const nivel = criterios[c.key] || "tranquilo";
     return `
@@ -108,6 +131,16 @@ function renderAnalise(a){
       </div>`;
   }).join("");
 
+  // Religião (rótulo)
+  const religiaoHTML = `
+    <div class="crit-item">
+      <span class="label">🙏 Religião</span>
+      <span class="tag-religiao ${relLabel.classe}">${relLabel.icon} ${esc(relLabel.texto)}</span>
+    </div>
+    ${rel.descricao ? `<p style="font-size:12.5px; color:var(--ink-dim); margin:6px 4px 0;">${esc(rel.descricao)}</p>` : ""}
+  `;
+
+  // Critérios adicionais
   const adicionaisHTML = CRITERIOS_ADICIONAIS.map(c => {
     const nivel = criterios[c.key] || "tranquilo";
     return `
@@ -127,7 +160,8 @@ function renderAnalise(a){
     : "";
 
   box.innerHTML = `
-    <div class="card" style="--accent: var(--sky);">
+    <div class="card" style="--accent: var(--violet);">
+      <div class="confiabilidade ${conf}">${confTexto}</div>
       <div class="book-header">
         <div class="cover">${capa}</div>
         <div class="book-info">
@@ -149,7 +183,10 @@ function renderAnalise(a){
 
     <div class="card" style="--accent: var(--coral);">
       <h4 class="section-title">⚠️ Conteúdo sensível</h4>
-      <div class="crit-list">${visiveisHTML}</div>
+      <div class="crit-list">
+        ${visiveisHTML}
+        ${religiaoHTML}
+      </div>
 
       <button class="toggle-btn" id="btn-toggle" type="button">
         <span class="arrow">▸</span>
@@ -184,8 +221,10 @@ function renderAnalise(a){
 
 // ---------- Pesquisar ----------
 document.getElementById("btn-analisar").addEventListener("click", async () => {
-  const titulo = document.getElementById("input-titulo").value.trim();
-  const autor  = document.getElementById("input-autor").value.trim();
+  const inputTitulo = document.getElementById("input-titulo");
+  const inputAutor  = document.getElementById("input-autor");
+  const titulo = inputTitulo.value.trim();
+  const autor  = inputAutor.value.trim();
   const status = document.getElementById("search-status");
   const btn    = document.getElementById("btn-analisar");
 
@@ -213,6 +252,10 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
     renderHistorico();
     renderRanking();
 
+    // Limpar campos após sucesso
+    inputTitulo.value = "";
+    inputAutor.value = "";
+
     status.textContent = "✅ Análise concluída.";
   } catch (err){
     console.error(err);
@@ -239,7 +282,7 @@ function renderHistorico(){
         <p>${esc(l.autor || "")} · consultado em ${new Date(l.consultadoEm).toLocaleDateString("pt-BR")}</p>
         <div class="meta-inline">
           <span class="badge ${badgeClass(l.vereditoNivel)}">${badgeLabel(l.vereditoNivel)}</span>
-          <span style="color: var(--gold2); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
+          <span style="color: var(--ink); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
           ${l.faixaEtaria ? `<span style="color: var(--ink-dim);">👦 ${esc(l.faixaEtaria)}</span>` : ""}
         </div>
       </div>
@@ -334,7 +377,7 @@ function renderRanking(){
           <h4>${esc(l.titulo)}</h4>
           <p class="autor">${esc(l.autor || "")}</p>
           <div class="meta">
-            <span style="color: var(--gold2); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
+            <span style="color: var(--ink); font-weight:700;">⭐ ${l.nota ?? "—"}/10</span>
             <span>👦 ${esc(l.faixaEtaria || "?")}</span>
             <span class="badge ${badgeClass(l._comp.nivel)}">${l._comp.texto}</span>
             <span class="badge ${badgeClass(l.vereditoNivel)}">${badgeLabel(l.vereditoNivel)}</span>
