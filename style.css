@@ -887,4 +887,10 @@ footer .copyright #app-version{
   .score-box{ flex-direction: column; align-items: flex-start; }
   .score-num{ font-size: 42px; }
   .livro-item{ flex-direction: column; align-items: stretch; }
-  .livro-item .acoes{ justify
+  .livro-item .acoes{ justify-content: flex-end; }
+  .panel-header h2{ font-size: 20px; }
+  .search-box{ padding: 24px 20px; }
+  .search-box h2{ font-size: 20px; }
+  .ranking-controls{ padding: 18px; gap: 14px; }
+  .tab{ font-size: 13px; padding: 9px 16px; }
+}
