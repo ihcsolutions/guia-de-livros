@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 4.4
+// Guia de Livros — Versão 4.5
 // Overlay de busca + Enter sempre dispara + Cancelar + Esc
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "4.4";
+const APP_VERSION = "4.5";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
