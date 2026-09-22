@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deploy Worker — Guia de Livros</title>
+<title>Deploy Worker v2 — Guia de Livros</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -52,6 +52,7 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     font-family: inherit;
+    margin-bottom: 10px;
   }
   button:active { opacity: 0.7; }
   button:disabled { opacity: 0.4; }
@@ -92,15 +93,22 @@
     margin-bottom: 14px;
     line-height: 1.55;
   }
+  .passo {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
 
-<h1>🚀 Deploy do Worker</h1>
-<p class="sub">Atualiza o Worker da Cloudflare sem editar no painel</p>
+<h1>🚀 Deploy Worker v2</h1>
+<p class="sub">Diagnóstico passo a passo</p>
 
 <div class="warning">
-  <strong>⚠️ Segurança:</strong> O token que você colar aqui <strong>não sai do seu iPhone</strong> — é enviado direto pra API da Cloudflare. Depois do deploy, <strong>revogue o token</strong> no painel.
+  <strong>⚠️</strong> O token não sai do seu iPhone. Revogue depois no painel.
 </div>
 
 <div class="box">
@@ -108,46 +116,130 @@
   <input id="token" type="password" placeholder="Cole o token aqui" autocomplete="off">
 
   <label>Account ID</label>
-  <input id="accountId" type="text" placeholder="ID da conta Cloudflare" autocomplete="off">
+  <input id="accountId" type="text" placeholder="32 caracteres" autocomplete="off">
+
+  <label>Nome do Worker</label>
+  <input id="scriptName" type="text" value="guia-de-livros-brain" autocomplete="off">
 </div>
 
+<button id="btn-diag" onclick="diagnostico()">🔍 Só verificar (sem alterar)</button>
 <button id="btn" onclick="deploy()">🚀 Deploy</button>
 
-<div id="status" class="status" style="margin-top: 14px;"></div>
+<div id="status" class="status"></div>
 <pre id="log"></pre>
 
 <script>
-const SCRIPT_NAME = "guia-de-livros-brain";
-const WORKER_URL = "worker.js";
+const WORKER_FILE = "worker.js";
+
+function setStatus(tipo, texto) {
+  const s = document.getElementById("status");
+  s.className = "status show " + tipo;
+  s.textContent = texto;
+}
+function log(msg) {
+  const l = document.getElementById("log");
+  l.textContent += msg + "\n";
+  l.className = "show";
+}
+function limpar() {
+  document.getElementById("log").textContent = "";
+}
+
+async function diagnostico() {
+  limpar();
+  const token = document.getElementById("token").value.trim();
+  const accountId = document.getElementById("accountId").value.trim();
+
+  setStatus("loading", "🔍 Rodando diagnóstico...");
+
+  // 1. Testa baixar worker.js
+  log("=== 1. Baixar worker.js do GitHub ===");
+  try {
+    const url = WORKER_FILE + "?t=" + Date.now();
+    log("URL: " + url);
+    const r = await fetch(url);
+    log("Status HTTP: " + r.status);
+    if (!r.ok) {
+      setStatus("err", "❌ worker.js não encontrado no GitHub (HTTP " + r.status + "). Suba o arquivo primeiro.");
+      return;
+    }
+    const code = await r.text();
+    log("Tamanho: " + code.length + " bytes");
+    log("Primeiras linhas: " + code.slice(0, 100).replace(/\n/g, " "));
+    log("✅ worker.js OK");
+  } catch (e) {
+    log("❌ Erro: " + e.message);
+    setStatus("err", "❌ Falhou baixar worker.js: " + e.message);
+    return;
+  }
+
+  // 2. Testa token na API Cloudflare
+  log("\n=== 2. Testar token na API ===");
+  if (!token) {
+    log("⚠️ Token não preenchido");
+    setStatus("err", "⚠️ Preencha o token primeiro");
+    return;
+  }
+  if (!accountId) {
+    log("⚠️ Account ID não preenchido");
+    setStatus("err", "⚠️ Preencha o Account ID primeiro");
+    return;
+  }
+  log("Token: " + token.length + " caracteres (mostrando só os últimos 4: ..." + token.slice(-4) + ")");
+  log("Account ID: " + accountId.length + " caracteres");
+
+  try {
+    const r = await fetch(
+      "https://api.cloudflare.com/client/v4/accounts/" + accountId + "/workers/scripts",
+      {
+        method: "GET",
+        headers: { "Authorization": "Bearer " + token }
+      }
+    );
+    log("Status HTTP: " + r.status);
+    const data = await r.json();
+    log("Resposta: " + JSON.stringify(data).slice(0, 300));
+
+    if (data.success) {
+      log("✅ Token OK — " + (data.result?.length || 0) + " workers encontrados");
+      const nomes = (data.result || []).map(w => w.id).join(", ");
+      log("Workers na conta: " + nomes);
+      setStatus("ok", "✅ Tudo OK. Pode clicar em Deploy.");
+    } else {
+      const err = data.errors?.[0]?.message || "erro desconhecido";
+      log("❌ Erro: " + err);
+      setStatus("err", "❌ Token inválido: " + err);
+    }
+  } catch (e) {
+    log("❌ Exceção: " + e.name + " — " + e.message);
+    setStatus("err", "❌ Falha de rede ao chamar Cloudflare: " + e.message);
+  }
+}
 
 async function deploy() {
   const btn = document.getElementById("btn");
   const token = document.getElementById("token").value.trim();
   const accountId = document.getElementById("accountId").value.trim();
-  const status = document.getElementById("status");
-  const log = document.getElementById("log");
+  const scriptName = document.getElementById("scriptName").value.trim();
 
-  if (!token || !accountId) {
-    status.className = "status show err";
-    status.textContent = "❌ Preencha token e Account ID";
-    return;
-  }
-
+  limpar();
   btn.disabled = true;
-  log.className = "";
-  status.className = "status show loading";
-  status.textContent = "⏳ Baixando worker.js...";
 
   try {
-    const r = await fetch(WORKER_URL + "?t=" + Date.now());
-    if (!r.ok) throw new Error("Não consegui baixar worker.js (HTTP " + r.status + ")");
+    setStatus("loading", "⏳ Baixando worker.js...");
+    log("=== Baixando worker.js ===");
+    const r = await fetch(WORKER_FILE + "?t=" + Date.now());
+    if (!r.ok) throw new Error("worker.js HTTP " + r.status);
     const code = await r.text();
+    log("OK — " + code.length + " bytes");
 
-    status.textContent = "⏳ Enviando " + code.length + " bytes pra Cloudflare...";
+    setStatus("loading", "⏳ Enviando pra Cloudflare...");
+    log("\n=== PUT na API Cloudflare ===");
+    log("URL: /accounts/" + accountId + "/workers/scripts/" + scriptName + "/content");
 
     const resp = await fetch(
       "https://api.cloudflare.com/client/v4/accounts/" + accountId +
-      "/workers/scripts/" + SCRIPT_NAME + "/content",
+      "/workers/scripts/" + scriptName + "/content",
       {
         method: "PUT",
         headers: {
@@ -158,21 +250,19 @@ async function deploy() {
       }
     );
 
+    log("Status HTTP: " + resp.status);
     const data = await resp.json();
-    log.textContent = JSON.stringify(data, null, 2);
-    log.className = "show";
+    log("Resposta: " + JSON.stringify(data, null, 2).slice(0, 500));
 
     if (data.success) {
-      status.className = "status show ok";
-      status.textContent = "✅ Deploy feito! Worker atualizado com sucesso.";
+      setStatus("ok", "✅ Deploy feito! Worker v5.4.1 no ar.");
     } else {
-      const msg = data.errors?.[0]?.message || "Erro desconhecido";
-      status.className = "status show err";
-      status.textContent = "❌ Erro: " + msg;
+      const msg = data.errors?.[0]?.message || "erro desconhecido";
+      setStatus("err", "❌ " + msg);
     }
   } catch (e) {
-    status.className = "status show err";
-    status.textContent = "❌ " + e.message;
+    setStatus("err", "❌ " + e.name + ": " + e.message);
+    log("\n❌ Exceção completa: " + e.name + " — " + e.message);
   } finally {
     btn.disabled = false;
   }
