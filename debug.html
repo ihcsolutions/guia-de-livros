@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug — Guia de Livros</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #1a2039;
+    color: #eef1ff;
+    padding: 16px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 18px; margin-bottom: 4px; }
+  .sub { font-size: 13px; opacity: 0.6; margin-bottom: 16px; }
+  .box {
+    background: #222b3e;
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #3a4460;
+    background: #141a29;
+    color: #eef1ff;
+    font-size: 15px;
+    margin-bottom: 10px;
+    -webkit-appearance: none;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 999px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #9b7bff, #4dc8ff);
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active { opacity: 0.7; }
+  button:disabled { opacity: 0.4; }
+  button.secondary {
+    background: #2c3654;
+    color: #eef1ff;
+  }
+  .status {
+    font-size: 13px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #141a29;
+    margin-bottom: 12px;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.ok { color: #8de8df; }
+  .status.err { color: #ff9b9b; }
+  .status.loading { color: #ffe08a; }
+  pre {
+    background: #0d1220;
+    color: #d8e7ff;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.45;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    -webkit-overflow-scrolling: touch;
+    font-family: "SF Mono", Menlo, monospace;
+  }
+  .copy-btn {
+    margin-top: 10px;
+    background: #2c3654;
+    color: #eef1ff;
+    font-size: 13px;
+    padding: 10px;
+  }
+  .section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.5;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Debug — Guia de Livros</h1>
+<p class="sub">Roda o fetch no Worker e mostra o JSON</p>
+
+<div class="box">
+  <div class="section-title">Testes rápidos</div>
+  <button onclick="rodar('O Menino Maluquinho', 'Ziraldo')">📖 Maluquinho</button>
+  <button onclick="rodar('A Teia de Charlotte', 'E. B. White')">🕷️ Teia de Charlotte</button>
+</div>
+
+<div class="box">
+  <div class="section-title">Personalizado</div>
+  <input id="input-titulo" type="text" placeholder="Título" autocomplete="off">
+  <input id="input-autor" type="text" placeholder="Autor (opcional)" autocomplete="off">
+  <button onclick="rodarPersonalizado()">🔎 Analisar</button>
+</div>
+
+<div id="status" class="status"></div>
+
+<div class="box" id="resultado-box" style="display:none;">
+  <div class="section-title">JSON completo</div>
+  <pre id="json-output"></pre>
+  <button class="copy-btn" onclick="copiar()">📋 Copiar JSON</button>
+</div>
+
+<script>
+const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
+
+async function rodar(titulo, autor) {
+  const status = document.getElementById("status");
+  const box = document.getElementById("resultado-box");
+  const out = document.getElementById("json-output");
+
+  box.style.display = "none";
+  status.className = "status show loading";
+  status.textContent = "⏳ Analisando \"" + titulo + "\"... (pode levar 15-30s)";
+
+  try {
+    const r = await fetch(WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ titulo, autor: autor || "" })
+    });
+    const d = await r.json();
+
+    status.className = "status show ok";
+    status.textContent = "✅ Concluído — CONF: " + (d.confiabilidade || "?") + " · CACHE: " + (d._cache || "?");
+
+    out.textContent = JSON.stringify(d, null, 2);
+    box.style.display = "block";
+    box.scrollIntoView({ behavior: "smooth" });
+  } catch (e) {
+    status.className = "status show err";
+    status.textContent = "❌ Erro: " + e.message;
+  }
+}
+
+function rodarPersonalizado() {
+  const t = document.getElementById("input-titulo").value.trim();
+  const a = document.getElementById("input-autor").value.trim();
+  if (!t) {
+    alert("Digite o título.");
+    return;
+  }
+  rodar(t, a);
+}
+
+function copiar() {
+  const texto = document.getElementById("json-output").textContent;
+  navigator.clipboard.writeText(texto).then(
+    () => alert("JSON copiado!"),
+    () => alert("Não consegui copiar. Segura e seleciona manualmente.")
+  );
+}
+</script>
+
+</body>
+</html>
