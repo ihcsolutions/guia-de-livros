@@ -1,8 +1,8 @@
 /* ============================================================
-   Guia de Livros — v4.2
-   Base: v4.1 + Ajustes de versão
+   Guia de Livros — v4.3
+   Base: v4.2 + Overlay de busca + Aviso abaixo do botão
    ============================================================ */
-  
+
 :root{
   color-scheme: light;
   --bg-1: #E6E8F2;
@@ -64,7 +64,6 @@ body{
   position: relative;
 }
 
-/* Botão "?" no canto */
 .btn-sobre{
   position: absolute;
   top: 20px;
@@ -230,13 +229,17 @@ p.subtitle{ font-size: 15.5px; color: var(--ink-on-dark-dim); margin: 0 auto; ma
 }
 .btn-primary:disabled{ opacity: 0.6; cursor: wait; }
 
-.status{ margin-top: 16px; font-size: 14px; color: var(--ink-dim); font-weight: 600; min-height: 20px; }
-
-.loading-etapa{
-  display: inline-block; font-weight: 700; color: var(--violet);
-  animation: pulse-text 1.6s ease-in-out infinite;
+/* Aviso abaixo do botão (novo v4.3) */
+.aviso-busca{
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.2px;
 }
-@keyframes pulse-text{ 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.status{ margin-top: 10px; font-size: 14px; color: var(--ink-dim); font-weight: 600; min-height: 20px; }
 
 /* Resultado */
 .resultado{ margin-top: 24px; }
@@ -564,6 +567,120 @@ footer .copyright .dot{ margin: 0 8px; color: var(--violet); }
 footer .copyright #app-version{ color: var(--violet); font-weight: 800; }
 
 /* ============================================================
+   OVERLAY DE BUSCA — Novo v4.3
+   ============================================================ */
+.overlay-busca{
+  position: fixed;
+  inset: 0;
+  background: rgba(12,19,48,0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+.overlay-busca.hidden{ display: none; }
+
+.overlay-card{
+  background: var(--glass-strong);
+  border: 1.5px solid var(--glass-border);
+  border-radius: var(--r-lg);
+  padding: 36px 30px 28px;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4),
+              inset 0 1px 0 rgba(255,255,255,0.9);
+  animation: slideUp 0.25s ease;
+}
+
+.overlay-spinner{
+  position: relative;
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spinner-ring{
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(155,123,255,0.18);
+  border-top-color: var(--violet);
+  border-right-color: var(--cyan);
+  animation: girar 1.1s linear infinite;
+}
+.spinner-icon{
+  font-size: 34px;
+  animation: pulsar 1.6s ease-in-out infinite;
+}
+@keyframes girar{
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes pulsar{
+  0%, 100% { transform: scale(1);   opacity: 1;    }
+  50%      { transform: scale(1.12); opacity: 0.75; }
+}
+
+.overlay-card h3{
+  font-family: 'Baloo 2', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.overlay-etapa{
+  font-size: 14.5px;
+  color: var(--violet);
+  font-weight: 700;
+  min-height: 22px;
+  margin-bottom: 10px;
+  animation: pulse-text 1.6s ease-in-out infinite;
+}
+.overlay-livro{
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 22px;
+  min-height: 16px;
+}
+.overlay-cancelar{
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--ink-dim);
+  background: rgba(255,255,255,0.7);
+  border: 1.5px solid var(--glass-border);
+  padding: 10px 26px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 4px 4px 10px rgba(174,180,205,0.35),
+              -3px -3px 8px rgba(255,255,255,0.9);
+}
+.overlay-cancelar:hover{
+  color: var(--red);
+  border-color: rgba(255,90,95,0.4);
+  background: rgba(255,255,255,0.95);
+  transform: translateY(-1px);
+  box-shadow: 5px 5px 12px rgba(255,90,95,0.25),
+              -4px -4px 10px rgba(255,255,255,0.95);
+}
+
+@keyframes pulse-text{ 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@keyframes fadeIn{ from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp{
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ============================================================
    MODAL SOBRE
    ============================================================ */
 .modal-overlay{
@@ -580,7 +697,6 @@ footer .copyright #app-version{ color: var(--violet); font-weight: 800; }
   overflow-y: auto;
   animation: fadeIn 0.18s ease;
 }
-@keyframes fadeIn{ from { opacity: 0; } to { opacity: 1; } }
 .modal-overlay.hidden{ display: none; }
 
 .modal-box{
@@ -594,10 +710,6 @@ footer .copyright #app-version{ color: var(--violet); font-weight: 800; }
   animation: slideUp 0.22s ease;
   overflow: hidden;
 }
-@keyframes slideUp{
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
 
 .modal-header{
   display: flex;
@@ -610,6 +722,7 @@ footer .copyright #app-version{ color: var(--violet); font-weight: 800; }
   top: 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  z-index: 1;
 }
 .modal-header h2{
   font-family: 'Baloo 2', sans-serif;
@@ -658,6 +771,9 @@ footer .copyright #app-version{ color: var(--violet); font-weight: 800; }
 }
 .modal-section .crit-list{ margin-top: 4px; }
 
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
 @media (max-width: 640px){
   .hero{ padding: 18px 18px 0; }
   h1.title{ font-size: 34px; }
@@ -672,4 +788,7 @@ footer .copyright #app-version{ color: var(--violet); font-weight: 800; }
   .modal-overlay{ padding: 20px 12px; }
   .modal-body{ padding: 18px; }
   .modal-header{ padding: 16px 18px; }
+  .overlay-card{ padding: 28px 22px 22px; }
+  .overlay-spinner{ width: 74px; height: 74px; margin-bottom: 18px; }
+  .spinner-icon{ font-size: 28px; }
 }
