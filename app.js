@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 4.3
-// Overlay de busca + Enter + Cancelar + Esc reforçado
+// Guia de Livros — Versão 4.4
+// Overlay de busca + Enter sempre dispara + Cancelar + Esc
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "4.3";
+const APP_VERSION = "4.4";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
@@ -82,7 +82,7 @@ modal.addEventListener("click", (e) => {
   if (e.target === modal) fecharModal();
 });
 
-// Esc fecha o modal Sobre — reforçado com capture para pegar antes de qualquer coisa
+// Esc fecha o modal Sobre — reforçado com capture
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !modal.classList.contains("hidden")) {
     e.preventDefault();
@@ -349,23 +349,14 @@ async function executarAnalise(){
 
 btnAnalisar.addEventListener("click", executarAnalise);
 
-// Enter nos campos — dispara análise (ou pula pro autor)
-inputTitulo.addEventListener("keydown", (e) => {
-  if (e.key === "Enter"){
-    e.preventDefault();
-    if (inputAutor.value.trim() === ""){
-      inputAutor.focus();
-    } else {
+// ---------- Enter em QUALQUER campo dispara a análise ----------
+[inputTitulo, inputAutor].forEach(input => {
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      e.preventDefault();
       executarAnalise();
     }
-  }
-});
-
-inputAutor.addEventListener("keydown", (e) => {
-  if (e.key === "Enter"){
-    e.preventDefault();
-    executarAnalise();
-  }
+  });
 });
 
 // ---------- Histórico: render ----------
