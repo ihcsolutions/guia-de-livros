@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 4.2
-// Modal Sobre + Respeito fundido + Violência com discriminação
+// Guia de Livros — Versão 4.3
+// Overlay de busca + Enter + Cancelar + Esc reforçado
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "4.2";
+const APP_VERSION = "4.3";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
@@ -15,7 +15,7 @@ const CRITERIOS_VISIVEIS = [
   { key: "Identidade de Gênero", icon: "🌈", label: "Identidade de Gênero" }
 ];
 
-// ---------- Critérios adicionais (agora 8, com Respeito fundido) ----------
+// ---------- Critérios adicionais ----------
 const CRITERIOS_ADICIONAIS = [
   { key: "Sexo", icon: "💞", label: "Sexo" },
   { key: "Medo/Terror", icon: "😨", label: "Medo / Terror" },
@@ -81,13 +81,69 @@ document.getElementById("modal-close").addEventListener("click", fecharModal);
 modal.addEventListener("click", (e) => {
   if (e.target === modal) fecharModal();
 });
+
+// Esc fecha o modal Sobre — reforçado com capture para pegar antes de qualquer coisa
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && !modal.classList.contains("hidden")) fecharModal();
-});
+  if (e.key === "Escape" && !modal.classList.contains("hidden")) {
+    e.preventDefault();
+    e.stopPropagation();
+    fecharModal();
+  }
+}, true);
+
 function fecharModal(){
   modal.classList.add("hidden");
   document.body.style.overflow = "";
 }
+
+// ---------- Overlay de busca ----------
+const overlay = document.getElementById("overlay-busca");
+const overlayEtapa = document.getElementById("overlay-etapa");
+const overlayLivro = document.getElementById("overlay-livro");
+const overlayCancelar = document.getElementById("overlay-cancelar");
+
+const ETAPAS = [
+  "🔎 Buscando o livro...",
+  "📚 Procurando resenhas e sinopses...",
+  "🧠 Lendo avaliações e analisando critérios...",
+  "✍️ Preparando seu relatório final...",
+  "📊 Organizando os resultados..."
+];
+
+let tickerOverlay = null;
+let controllerAtual = null;
+let canceladoPeloUsuario = false;
+
+function abrirOverlay(titulo, autor){
+  overlayLivro.textContent = `${titulo}${autor ? " — " + autor : ""}`;
+  overlayEtapa.textContent = ETAPAS[0];
+  overlay.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  let i = 0;
+  tickerOverlay = setInterval(() => {
+    i = (i + 1) % ETAPAS.length;
+    overlayEtapa.textContent = ETAPAS[i];
+  }, 6000);
+}
+
+function fecharOverlay(){
+  overlay.classList.add("hidden");
+  document.body.style.overflow = "";
+  if (tickerOverlay){
+    clearInterval(tickerOverlay);
+    tickerOverlay = null;
+  }
+}
+
+overlayCancelar.addEventListener("click", () => {
+  canceladoPeloUsuario = true;
+  if (controllerAtual) controllerAtual.abort();
+  fecharOverlay();
+  const status = document.getElementById("search-status");
+  status.textContent = "⚠️ Análise cancelada.";
+  document.getElementById("btn-analisar").disabled = false;
+});
 
 // ---------- Histórico ----------
 function getHistorico(){
@@ -235,38 +291,36 @@ function renderAnalise(a){
 }
 
 // ---------- Pesquisar ----------
-document.getElementById("btn-analisar").addEventListener("click", async () => {
-  const inputTitulo = document.getElementById("input-titulo");
-  const inputAutor  = document.getElementById("input-autor");
+const inputTitulo = document.getElementById("input-titulo");
+const inputAutor  = document.getElementById("input-autor");
+const btnAnalisar = document.getElementById("btn-analisar");
+const statusEl    = document.getElementById("search-status");
+
+async function executarAnalise(){
   const titulo = inputTitulo.value.trim();
   const autor  = inputAutor.value.trim();
-  const status = document.getElementById("search-status");
-  const btn    = document.getElementById("btn-analisar");
 
-  if (!titulo){ status.textContent = "⚠️ Digite o nome do livro."; return; }
+  if (!titulo){
+    statusEl.textContent = "⚠️ Digite o nome do livro.";
+    inputTitulo.focus();
+    return;
+  }
 
-  const etapas = [
-    "🔎 Buscando o livro...",
-    "📚 Procurando resenhas e sinopses...",
-    "🧠 Lendo avaliações e analisando critérios...",
-    "✍️ Preparando seu relatório final...",
-    "📊 Organizando os resultados..."
-  ];
-  let etapaAtual = 0;
-  status.innerHTML = `<span class="loading-etapa">${etapas[0]}</span>`;
-  const ticker = setInterval(() => {
-    etapaAtual = (etapaAtual + 1) % etapas.length;
-    status.innerHTML = `<span class="loading-etapa">${etapas[etapaAtual]}</span>`;
-  }, 6000);
+  statusEl.textContent = "";
+  canceladoPeloUsuario = false;
+  abrirOverlay(titulo, autor);
+  btnAnalisar.disabled = true;
 
-  btn.disabled = true;
+  controllerAtual = new AbortController();
 
   try {
     const resp = await fetch(WORKER_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ titulo, autor })
+      body: JSON.stringify({ titulo, autor }),
+      signal: controllerAtual.signal
     });
+
     if (!resp.ok) throw new Error("Erro na análise: " + resp.status);
     const analise = await resp.json();
     if (analise.erro) throw new Error(analise.erro);
@@ -278,14 +332,39 @@ document.getElementById("btn-analisar").addEventListener("click", async () => {
 
     inputTitulo.value = "";
     inputAutor.value = "";
-
-    status.textContent = "✅ Análise concluída.";
+    statusEl.textContent = "✅ Análise concluída.";
   } catch (err){
-    console.error(err);
-    status.textContent = "❌ " + err.message;
+    if (err.name === "AbortError" || canceladoPeloUsuario){
+      // já tratado no handler do botão Cancelar
+    } else {
+      console.error(err);
+      statusEl.textContent = "❌ " + err.message;
+    }
   } finally {
-    clearInterval(ticker);
-    btn.disabled = false;
+    fecharOverlay();
+    controllerAtual = null;
+    btnAnalisar.disabled = false;
+  }
+}
+
+btnAnalisar.addEventListener("click", executarAnalise);
+
+// Enter nos campos — dispara análise (ou pula pro autor)
+inputTitulo.addEventListener("keydown", (e) => {
+  if (e.key === "Enter"){
+    e.preventDefault();
+    if (inputAutor.value.trim() === ""){
+      inputAutor.focus();
+    } else {
+      executarAnalise();
+    }
+  }
+});
+
+inputAutor.addEventListener("keydown", (e) => {
+  if (e.key === "Enter"){
+    e.preventDefault();
+    executarAnalise();
   }
 });
 
