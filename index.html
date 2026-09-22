@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4.2">
+<link rel="stylesheet" href="style.css?v=4.3">
 </head>
 <body>
 
@@ -56,15 +56,16 @@
 
         <div class="search-field">
           <span class="search-icon">📖</span>
-          <input id="input-titulo" type="text" placeholder="Nome do livro...">
+          <input id="input-titulo" type="text" placeholder="Nome do livro..." autocomplete="off">
         </div>
 
         <div class="search-field">
           <span class="search-icon">✍️</span>
-          <input id="input-autor" type="text" placeholder="Autor (opcional)">
+          <input id="input-autor" type="text" placeholder="Autor (opcional)" autocomplete="off">
         </div>
 
         <button id="btn-analisar" class="btn-primary">🔎 ANALISAR</button>
+        <p class="aviso-busca">⏳ A busca pode demorar um pouco, dependendo da sua conexão.</p>
         <p id="search-status" class="status"></p>
       </div>
 
@@ -118,10 +119,24 @@
     <p class="copyright">
       © <span id="copy-year"></span> Ihcsolutions
       <span class="dot">·</span>
-      v<span id="app-version">4.1</span>
+      v<span id="app-version">4.3</span>
     </p>
   </footer>
 
+</div>
+
+<!-- ============ OVERLAY DE BUSCA ============ -->
+<div class="overlay-busca hidden" id="overlay-busca">
+  <div class="overlay-card" role="dialog" aria-labelledby="overlay-titulo">
+    <div class="overlay-spinner" aria-hidden="true">
+      <div class="spinner-ring"></div>
+      <div class="spinner-icon">📖</div>
+    </div>
+    <h3 id="overlay-titulo">Analisando o livro...</h3>
+    <p class="overlay-etapa" id="overlay-etapa">🔎 Buscando o livro...</p>
+    <p class="overlay-livro" id="overlay-livro"></p>
+    <button class="overlay-cancelar" id="overlay-cancelar">Cancelar</button>
+  </div>
 </div>
 
 <!-- ============ MODAL SOBRE ============ -->
@@ -217,6 +232,6 @@
   </div>
 </div>
 
-<script src="app.js?v=4.2"></script>
+<script src="app.js?v=4.3"></script>
 </body>
 </html>
