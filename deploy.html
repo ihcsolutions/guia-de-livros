@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deploy Worker — Guia de Livros</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #1a2039;
+    color: #eef1ff;
+    padding: 16px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 20px; margin-bottom: 6px; }
+  .sub { font-size: 13px; opacity: 0.6; margin-bottom: 20px; }
+  .box {
+    background: #222b3e;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+  input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #3a4460;
+    background: #141a29;
+    color: #eef1ff;
+    font-size: 15px;
+    margin-bottom: 14px;
+    -webkit-appearance: none;
+    font-family: inherit;
+  }
+  input:last-of-type { margin-bottom: 0; }
+  button {
+    width: 100%;
+    padding: 16px;
+    border-radius: 999px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #9b7bff, #4dc8ff);
+    color: #fff;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+  }
+  button:active { opacity: 0.7; }
+  button:disabled { opacity: 0.4; }
+  .status {
+    font-size: 14px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #141a29;
+    margin-bottom: 12px;
+    display: none;
+    word-break: break-word;
+  }
+  .status.show { display: block; }
+  .status.ok { color: #8de8df; }
+  .status.err { color: #ff9b9b; }
+  .status.loading { color: #ffe08a; }
+  pre {
+    background: #0d1220;
+    color: #d8e7ff;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 11px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "SF Mono", Menlo, monospace;
+    display: none;
+  }
+  pre.show { display: block; }
+  .warning {
+    background: #3a1a1a;
+    border: 1px solid #6a2a2a;
+    color: #ffb0b0;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    margin-bottom: 14px;
+    line-height: 1.55;
+  }
+</style>
+</head>
+<body>
+
+<h1>🚀 Deploy do Worker</h1>
+<p class="sub">Atualiza o Worker da Cloudflare sem editar no painel</p>
+
+<div class="warning">
+  <strong>⚠️ Segurança:</strong> O token que você colar aqui <strong>não sai do seu iPhone</strong> — é enviado direto pra API da Cloudflare. Depois do deploy, <strong>revogue o token</strong> no painel.
+</div>
+
+<div class="box">
+  <label>API Token da Cloudflare</label>
+  <input id="token" type="password" placeholder="Cole o token aqui" autocomplete="off">
+
+  <label>Account ID</label>
+  <input id="accountId" type="text" placeholder="ID da conta Cloudflare" autocomplete="off">
+</div>
+
+<button id="btn" onclick="deploy()">🚀 Deploy</button>
+
+<div id="status" class="status" style="margin-top: 14px;"></div>
+<pre id="log"></pre>
+
+<script>
+const SCRIPT_NAME = "guia-de-livros-brain";
+const WORKER_URL = "worker.js";
+
+async function deploy() {
+  const btn = document.getElementById("btn");
+  const token = document.getElementById("token").value.trim();
+  const accountId = document.getElementById("accountId").value.trim();
+  const status = document.getElementById("status");
+  const log = document.getElementById("log");
+
+  if (!token || !accountId) {
+    status.className = "status show err";
+    status.textContent = "❌ Preencha token e Account ID";
+    return;
+  }
+
+  btn.disabled = true;
+  log.className = "";
+  status.className = "status show loading";
+  status.textContent = "⏳ Baixando worker.js...";
+
+  try {
+    const r = await fetch(WORKER_URL + "?t=" + Date.now());
+    if (!r.ok) throw new Error("Não consegui baixar worker.js (HTTP " + r.status + ")");
+    const code = await r.text();
+
+    status.textContent = "⏳ Enviando " + code.length + " bytes pra Cloudflare...";
+
+    const resp = await fetch(
+      "https://api.cloudflare.com/client/v4/accounts/" + accountId +
+      "/workers/scripts/" + SCRIPT_NAME + "/content",
+      {
+        method: "PUT",
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Content-Type": "application/javascript"
+        },
+        body: code
+      }
+    );
+
+    const data = await resp.json();
+    log.textContent = JSON.stringify(data, null, 2);
+    log.className = "show";
+
+    if (data.success) {
+      status.className = "status show ok";
+      status.textContent = "✅ Deploy feito! Worker atualizado com sucesso.";
+    } else {
+      const msg = data.errors?.[0]?.message || "Erro desconhecido";
+      status.className = "status show err";
+      status.textContent = "❌ Erro: " + msg;
+    }
+  } catch (e) {
+    status.className = "status show err";
+    status.textContent = "❌ " + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+
+</body>
+</html>
