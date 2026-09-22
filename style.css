@@ -1,6 +1,6 @@
 /* ============================================================
-   Guia de Livros — v5.4
-   Base: v4.5 + Capa mobile em formato retrato/vertical
+   Guia de Livros — v5.7
+   Base: v4.5 + confiabilidade 4 níveis (nao_confiavel)
    ============================================================ */
 
 :root{
@@ -386,9 +386,14 @@ p.subtitle{ font-size: 15.5px; color: var(--ink-on-dark-dim); margin: 0 auto; ma
   padding: 5px 12px; border-radius: var(--r-pill);
   margin-bottom: 12px; border: 1px solid transparent;
 }
-.confiabilidade.alta     { background: linear-gradient(135deg, #d4f5e1, #a8e9c4); color: #14703a; }
-.confiabilidade.moderada { background: linear-gradient(135deg, #fff3c4, #ffe08a); color: #8a6100; }
-.confiabilidade.baixa    { background: linear-gradient(135deg, #ffd1d1, #ff9b9b); color: #a02020; }
+.confiabilidade.alta         { background: linear-gradient(135deg, #d4f5e1, #a8e9c4); color: #14703a; }
+.confiabilidade.moderada     { background: linear-gradient(135deg, #fff3c4, #ffe08a); color: #8a6100; }
+.confiabilidade.baixa        { background: linear-gradient(135deg, #ffd1d1, #ff9b9b); color: #a02020; }
+.confiabilidade.nao_confiavel {
+  background: rgba(140,150,180,0.20);
+  color: #4a5470;
+  border-color: rgba(140,150,180,0.35);
+}
 
 .toggle-btn{
   margin-top: 14px; width: 100%;
