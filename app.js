@@ -1,12 +1,12 @@
 // ============================================================
-// Guia de Livros — Versão 5.4
-// Overlay de busca + Enter sempre dispara + Cancelar + Esc
+// Guia de Livros — Versão 5.7
+// Overlay + Enter + Cancelar + Esc + confiabilidade 4 níveis
 // © Ihcsolutions
 // ============================================================
 
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 const STORAGE_KEY = "guia_livros_historico_v2";
-const APP_VERSION = "5.4";
+const APP_VERSION = "5.7";
 
 // ---------- Critérios visíveis ----------
 const CRITERIOS_VISIVEIS = [
@@ -61,6 +61,15 @@ function normalizar(str){
   return String(str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
+// v5.7: renderiza fonte que pode ser string OU array
+function formatarFonte(fonteRaw){
+  if (!fonteRaw) return "";
+  if (Array.isArray(fonteRaw)) {
+    return fonteRaw.filter(Boolean).join(" · ");
+  }
+  return String(fonteRaw);
+}
+
 // ---------- Navegação ----------
 document.querySelectorAll(".tab").forEach(btn => {
   btn.addEventListener("click", () => {
@@ -82,7 +91,6 @@ modal.addEventListener("click", (e) => {
   if (e.target === modal) fecharModal();
 });
 
-// Esc fecha o modal Sobre — reforçado com capture
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !modal.classList.contains("hidden")) {
     e.preventDefault();
@@ -185,9 +193,10 @@ function renderAnalise(a){
 
   const conf = a.confiabilidade || "moderada";
   const confTexto = {
-    alta: "🟢 Confiabilidade alta",
-    moderada: "🟡 Confiabilidade moderada",
-    baixa: "🔴 Confiabilidade baixa"
+    alta:             "🟢 Confiabilidade alta",
+    moderada:         "🟡 Confiabilidade moderada",
+    baixa:            "🔴 Confiabilidade baixa",
+    nao_confiavel:    "⚫ Sem dados suficientes"
   }[conf] || "🟡 Confiabilidade moderada";
 
   const rel = a.religiao || { tipo: "nao_identificado", descricao: "" };
@@ -195,14 +204,14 @@ function renderAnalise(a){
 
   function renderCrit(c){
     const nivel = criterios[c.key] || "nao_identificado";
-    const fonte = fontesPorCriterio[c.key];
+    const fonteTexto = formatarFonte(fontesPorCriterio[c.key]);
     return `
       <div class="crit-item">
         <div class="crit-main">
           <span class="label">${c.icon} ${esc(c.label)}</span>
           <span class="badge ${badgeClass(nivel)}">${badgeLabel(nivel)}</span>
         </div>
-        ${fonte ? `<div class="crit-fonte">📎 ${esc(fonte)}</div>` : ""}
+        ${fonteTexto ? `<div class="crit-fonte">📎 ${esc(fonteTexto)}</div>` : ""}
       </div>`;
   }
 
@@ -215,7 +224,7 @@ function renderAnalise(a){
         <span class="tag-religiao ${relLabel.classe}">${relLabel.icon} ${esc(relLabel.texto)}</span>
       </div>
       ${rel.descricao ? `<div class="crit-fonte">${esc(rel.descricao)}</div>` : ""}
-      ${rel.fonte ? `<div class="crit-fonte">📎 ${esc(rel.fonte)}</div>` : ""}
+      ${rel.fonte ? `<div class="crit-fonte">📎 ${esc(formatarFonte(rel.fonte))}</div>` : ""}
     </div>
   `;
 
@@ -349,7 +358,6 @@ async function executarAnalise(){
 
 btnAnalisar.addEventListener("click", executarAnalise);
 
-// ---------- Enter em QUALQUER campo dispara a análise ----------
 [inputTitulo, inputAutor].forEach(input => {
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter"){
