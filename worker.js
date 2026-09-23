@@ -1,6 +1,6 @@
 // ============================================================
-// Cloudflare Worker — Guia de Livros v5.4.1
-// Groq + Fallback Gemini + Fontes prioritárias + Confiabilidade
+// Cloudflare Worker — Guia de Livros v5.10
+// Definições completas dos critérios + Groq + Gemini + cache duplo
 // ============================================================
 
 const CORS_HEADERS = {
@@ -12,7 +12,7 @@ const CORS_HEADERS = {
 };
 
 const CACHE_TTL = 60 * 60 * 24 * 30;
-const VERSAO_PROMPT = "v5.4.1";
+const VERSAO_PROMPT = "v5.10";
 
 const PROVEDORES = [
   {
@@ -22,7 +22,31 @@ const PROVEDORES = [
     url: "https://api.groq.com/openai/v1/chat/completions",
     model: "openai/gpt-oss-120b",
     envKey: "GROQ_API_KEY",
-    maxTokens: 2048
+    maxTokens: 3072
+  },
+  {
+    nome: "gemini-3.8-flash",
+    tipo: "gemini",
+    ativo: true,
+    model: "gemini-3.8-flash",
+    envKey: "GEMINI_API_KEY",
+    maxTokens: 3072
+  },
+  {
+    nome: "gemini-3.7-flash",
+    tipo: "gemini",
+    ativo: true,
+    model: "gemini-3.7-flash",
+    envKey: "GEMINI_API_KEY",
+    maxTokens: 3072
+  },
+  {
+    nome: "gemini-3.5-flash",
+    tipo: "gemini",
+    ativo: true,
+    model: "gemini-3.5-flash",
+    envKey: "GEMINI_API_KEY",
+    maxTokens: 3072
   },
   {
     nome: "gemini-2.5-flash",
@@ -30,7 +54,7 @@ const PROVEDORES = [
     ativo: true,
     model: "gemini-2.5-flash",
     envKey: "GEMINI_API_KEY",
-    maxTokens: 2048
+    maxTokens: 3072
   },
   {
     nome: "gemini-2.5-flash-lite",
@@ -38,23 +62,7 @@ const PROVEDORES = [
     ativo: true,
     model: "gemini-2.5-flash-lite",
     envKey: "GEMINI_API_KEY",
-    maxTokens: 2048
-  },
-  {
-    nome: "gemini-2.0-flash",
-    tipo: "gemini",
-    ativo: true,
-    model: "gemini-2.0-flash",
-    envKey: "GEMINI_API_KEY",
-    maxTokens: 2048
-  },
-  {
-    nome: "gemini-1.5-flash",
-    tipo: "gemini",
-    ativo: true,
-    model: "gemini-1.5-flash",
-    envKey: "GEMINI_API_KEY",
-    maxTokens: 2048
+    maxTokens: 3072
   }
 ];
 
@@ -70,12 +78,31 @@ export default {
     if (!titulo || typeof titulo !== "string") return json({ erro: "Informe o título do livro." }, 400);
 
     try {
+      // ============ 0. Cache por título+autor (fallback) ============
+      const chaveTitulo = gerarChaveTitulo(titulo, autor);
+      if (env.CACHE_KV) {
+        try {
+          const cachedTitulo = await env.CACHE_KV.get(`titulo:${chaveTitulo}`, { type: "json" });
+          if (cachedTitulo && cachedTitulo._versao_prompt === VERSAO_PROMPT) {
+            console.log(`Cache HIT por título: "${titulo}" (versão ${VERSAO_PROMPT})`);
+            return json({ ...cachedTitulo, _cache: "hit-titulo" });
+          }
+          if (cachedTitulo) {
+            console.log(`Cache por título IGNORADO: versão ${cachedTitulo._versao_prompt || "antiga"} ≠ ${VERSAO_PROMPT}`);
+          }
+        } catch (e) {
+          console.error("Cache GET por título falhou:", e.message);
+        }
+      }
+
+      // ============ 1. Metadados ============
       let meta = await buscarGoogleBooks(titulo, autor);
       const olData = await buscarOpenLibrary(titulo, autor);
       if (!meta && olData) meta = olData;
 
       let isbn = extrairISBN(meta) || olData?.isbn || null;
 
+      // ============ 2. Cache por ISBN ============
       if (isbn && env.CACHE_KV) {
         try {
           const cached = await env.CACHE_KV.get(`isbn:${isbn}`, { type: "json" });
@@ -91,9 +118,11 @@ export default {
         }
       }
 
+      // ============ 3. Fontes web ============
       const fontesWeb = await buscarFontes(titulo, autor, env);
       console.log(`Fontes encontradas: ${fontesWeb.length} (Tavily + LangSearch)`);
 
+      // ============ 4. Cascata de capa ============
       let capa = meta?.capa || null;
       if (!capa) {
         try {
@@ -104,10 +133,12 @@ export default {
         }
       }
 
+      // ============ 5. Indexar no AI Search (best-effort) ============
       if (fontesWeb.length > 0 && env.AI_SEARCH_API_TOKEN && env.AI_SEARCH_ACCOUNT_ID && env.AI_SEARCH_INSTANCE) {
         indexarNoAISearch(fontesWeb, env).catch(e => console.error("Indexação falhou:", e.message));
       }
 
+      // ============ 6. Analisar com IA ============
       let analise;
       try {
         analise = await analisarComIA(env, titulo, autor, meta, fontesWeb);
@@ -123,32 +154,65 @@ export default {
         }, 200);
       }
 
-      const contagem = contarCriterios(analise.fontesPorCriterio);
-      const confiabilidadeCalculada = calcularConfiabilidade(fontesWeb.length, contagem);
+      // ============ 7. Validar campos críticos ============
+      const camposFaltando = [];
+      if (!analise.fontesPorCriterio) camposFaltando.push("fontesPorCriterio");
+      if (!analise.religiao) camposFaltando.push("religiao");
+      if (!analise.conclusao) camposFaltando.push("conclusao");
+      if (camposFaltando.length > 0) {
+        console.warn(`⚠️ Campos faltando no JSON do Groq: ${camposFaltando.join(", ")}`);
+      }
+
+      // ============ 8. Calcular confiabilidade ============
+      let contagem;
+      let usouFallback = false;
+      if (analise.fontesPorCriterio && typeof analise.fontesPorCriterio === "object") {
+        contagem = contarCriterios(analise.fontesPorCriterio);
+      } else {
+        const totalFontes = (analise.fontes || []).length;
+        contagem = { web: totalFontes, ia: 0, vazio: 0 };
+        usouFallback = true;
+        console.warn(`⚠️ Fallback: usando fontes.length (${totalFontes}) como C_web`);
+      }
+
+      const F = fontesWeb.length;
+      const confiabilidadeCalculada = calcularConfiabilidade(F, contagem, usouFallback, camposFaltando);
       const detalhe = {
-        fontes_encontradas: fontesWeb.length,
+        fontes_encontradas: F,
         criterios_com_fonte_web: contagem.web,
         criterios_com_conhecimento_ia: contagem.ia,
         criterios_vazios: contagem.vazio,
+        usou_fallback: usouFallback,
+        campos_faltando: camposFaltando,
         regra_aplicada: confiabilidadeCalculada.regra
       };
 
-      console.log(`Confiabilidade: ${confiabilidadeCalculada.nivel} (F=${fontesWeb.length}, C_web=${contagem.web}, C_ia=${contagem.ia}, C_vazio=${contagem.vazio})`);
+      console.log(`Confiabilidade: ${confiabilidadeCalculada.nivel} (F=${F}, C_web=${contagem.web}, fallback=${usouFallback}, faltando=[${camposFaltando.join(",")}])`);
 
       analise.confiabilidade = confiabilidadeCalculada.nivel;
 
+      // ============ 9. Cache (grava nos dois formatos) ============
       const resultadoFinal = {
         ...analise,
         capa: capa || null,
         _versao_prompt: VERSAO_PROMPT,
         _confiabilidade_detalhe: detalhe
       };
-      if (isbn && env.CACHE_KV) {
+
+      if (env.CACHE_KV) {
+        if (isbn) {
+          try {
+            await env.CACHE_KV.put(`isbn:${isbn}`, JSON.stringify(resultadoFinal), { expirationTtl: CACHE_TTL });
+            console.log(`Cache SAVE por ISBN ${isbn} (versão ${VERSAO_PROMPT})`);
+          } catch (e) {
+            console.error("Cache PUT por ISBN falhou:", e.message);
+          }
+        }
         try {
-          await env.CACHE_KV.put(`isbn:${isbn}`, JSON.stringify(resultadoFinal), { expirationTtl: CACHE_TTL });
-          console.log(`Cache SAVE para ISBN ${isbn} (versão ${VERSAO_PROMPT})`);
+          await env.CACHE_KV.put(`titulo:${chaveTitulo}`, JSON.stringify(resultadoFinal), { expirationTtl: CACHE_TTL });
+          console.log(`Cache SAVE por título: "${titulo}" (versão ${VERSAO_PROMPT})`);
         } catch (e) {
-          console.error("Cache PUT falhou:", e.message);
+          console.error("Cache PUT por título falhou:", e.message);
         }
       }
 
@@ -166,17 +230,39 @@ export default {
 };
 
 // ============================================================
+// Gerar chave de cache a partir de título + autor
+// ============================================================
+function gerarChaveTitulo(titulo, autor) {
+  const t = normalizar(titulo);
+  const a = normalizar(autor || "");
+  const base = (t + "|" + a).slice(0, 200);
+  return base.replace(/[^a-z0-9|]/g, "-");
+}
+
+// ============================================================
 // Contagem de critérios por origem da fonte
 // ============================================================
 function contarCriterios(fontesPorCriterio) {
   let web = 0, ia = 0, vazio = 0;
-  for (const fonte of Object.values(fontesPorCriterio || {})) {
+
+  if (!fontesPorCriterio || typeof fontesPorCriterio !== "object") {
+    return { web: 0, ia: 0, vazio: 0 };
+  }
+
+  for (const fonte of Object.values(fontesPorCriterio)) {
+    if (Array.isArray(fonte)) {
+      if (fonte.length > 0) web++;
+      else vazio++;
+      continue;
+    }
     const f = String(fonte || "").trim().toLowerCase();
     if (!f || f === "nao_identificado" || f === "—" || f === "-") {
       vazio++;
     } else if (f.includes("conhecimento prévio") || f.includes("conhecimento previo")) {
       ia++;
     } else if (/^\[\d+\]/.test(f)) {
+      web++;
+    } else if (f.startsWith("http")) {
       web++;
     } else {
       vazio++;
@@ -186,21 +272,33 @@ function contarCriterios(fontesPorCriterio) {
 }
 
 // ============================================================
-// Cálculo da confiabilidade geral
+// Cálculo da confiabilidade
 // ============================================================
-function calcularConfiabilidade(F, contagem) {
+function calcularConfiabilidade(F, contagem, usouFallback, camposFaltando) {
   const C_web = contagem.web;
+  const temCamposFaltando = camposFaltando && camposFaltando.length > 0;
 
-  if (F >= 10 && C_web >= 4) {
-    return { nivel: "alta", regra: `alta (F=${F} >= 10 E C_web=${C_web} >= 4)` };
+  if (F === 0 && C_web === 0) {
+    return { nivel: "nao_confiavel", regra: `nao_confiavel (F=0 E C_web=0 — sem fontes)` };
   }
-  if (F >= 5 && C_web >= 2) {
-    return { nivel: "moderada", regra: `moderada (F=${F} >= 5 E C_web=${C_web} >= 2)` };
+
+  if (!temCamposFaltando && F >= 5 && C_web >= 3) {
+    return { nivel: "alta", regra: `alta (F=${F} >= 5 E C_web=${C_web} >= 3)` };
   }
-  if (F >= 10 && C_web >= 1) {
-    return { nivel: "moderada", regra: `moderada (F=${F} >= 10 E C_web=${C_web} >= 1)` };
+
+  if (F >= 3 && C_web >= 2) {
+    return { nivel: "moderada", regra: `moderada (F=${F} >= 3 E C_web=${C_web} >= 2${temCamposFaltando ? " — campos faltando" : ""})` };
   }
-  return { nivel: "baixa", regra: `baixa (F=${F}, C_web=${C_web} — não atingiu moderada)` };
+
+  if (F >= 1 && C_web >= 1) {
+    return { nivel: "baixa", regra: `baixa (F=${F} >= 1 E C_web=${C_web} >= 1${temCamposFaltando ? " — campos faltando" : ""})` };
+  }
+
+  if (F > 0) {
+    return { nivel: "baixa", regra: `baixa (F=${F} mas C_web=${C_web} — fallback de segurança)` };
+  }
+
+  return { nivel: "nao_confiavel", regra: `nao_confiavel (F=${F}, C_web=${C_web})` };
 }
 
 // ============================================================
@@ -330,7 +428,7 @@ async function buscarFontes(titulo, autor, env) {
 async function extrairOgImage(url) {
   try {
     const r = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; GuiaLivros/5.4.1)" }
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; GuiaLivros/5.10)" }
     });
     if (!r.ok) return null;
     const html = await r.text();
@@ -690,7 +788,7 @@ async function indexarNoAISearch(fontes, env) {
 }
 
 // ============================================================
-// IA — análise com fallback + prompt v5.4.1
+// IA — análise com fallback + prompt v5.10
 // ============================================================
 async function analisarComIA(env, titulo, autor, meta, fontes) {
   const provedoresAtivos = PROVEDORES.filter(p => p.ativo && env[p.envKey]);
@@ -715,8 +813,8 @@ async function analisarComIA(env, titulo, autor, meta, fontes) {
 async function chamarProvedor(provedor, env, titulo, autor, meta, fontes) {
   const apiKey = env[provedor.envKey];
 
-  const LIMITE_FONTES = 6;
-  const LIMITE_CHARS = 600;
+  const LIMITE_FONTES = 4;
+  const LIMITE_CHARS = 500;
 
   const fontesReduzidas = fontes
     .filter(f => f.conteudo && f.conteudo.length > 100)
@@ -739,7 +837,7 @@ async function chamarProvedor(provedor, env, titulo, autor, meta, fontes) {
     ? fontesReduzidas.map((f, i) => `[${i + 1}] ${f.titulo}\nURL: ${f.url}\n${f.conteudo}`).join("\n\n")
     : "Nenhuma fonte web.";
 
-  // ============ v5.4.1: prioridade OBRIGATÓRIA de fontes ============
+  // ============ v5.10: definições completas dos critérios ============
   const prompt = `Analista literário cristão. Analise "${titulo}"${autor ? ` de ${autor}` : ""}.
 
 META: ${metaLimpa ? JSON.stringify(metaLimpa) : "—"}
@@ -747,58 +845,82 @@ META: ${metaLimpa ? JSON.stringify(metaLimpa) : "—"}
 FONTES (${fontesReduzidas.length}):
 ${fontesTexto}
 
-═══ REGRA CRÍTICA: PRIORIDADE DE FONTES ═══
-Para CADA critério, siga esta ordem OBRIGATÓRIA:
-  (a) Se ALGUMA fonte web acima fala do critério → cite "[N] Título" em fontesPorCriterio.
-  (b) SÓ use "Conhecimento prévio" se NENHUMA fonte cobrir o critério.
-  (c) Só use "nao_identificado" se nem fonte nem conhecimento cobrirem.
+REGRAS CRÍTICAS:
+1. Retorne SOMENTE JSON válido. A ORDEM DAS CHAVES IMPORTA — siga exatamente.
 
-FONTES WEB TÊM PRIORIDADE ABSOLUTA SOBRE CONHECIMENTO PRÉVIO.
-Se você recebeu fontes e marcou "Conhecimento prévio" em TODOS os critérios,
-você está ERRADO — reveja quais fontes falam sobre cada critério.
+2. fontesPorCriterio: OBJETO com as 11 chaves de "criterios". Cada valor é um ARRAY
+   com NO MÁXIMO 3 URLs reais das fontes acima. Use [] se nenhuma fonte menciona.
+   Cite as URLs mais relevantes para cada critério, NÃO todas.
+   Lembre: se uma resenha descreve o livro, ela serve pra VÁRIOS critérios.
 
-EXEMPLO CERTO:
-  Fonte [2] fala de amizade e coragem.
-  → Respeito: tranquilo | fontesPorCriterio: "[2] Nome da fonte"
+3. criterios: use "nao_identificado" SOMENTE SE (a) você NÃO conhece o livro E
+   (b) nenhuma fonte menciona o critério. Se conhece, use "tranquilo" quando não há
+   conteúdo explícito sobre o critério.
 
-EXEMPLO ERRADO (NUNCA faça):
-  Fonte [2] fala de amizade mas você escreveu "Conhecimento prévio".
-  → Isso é errado. Cite a fonte.
+4. No array "fontes" (final), use APENAS URLs REAIS das fontes acima. NUNCA invente.
 
-═══ OUTRAS REGRAS ═══
-1. Bullying = agressão SISTEMÁTICA. Respeito = tom geral.
-2. No array "fontes" final, use APENAS URLs REAIS das fontes acima. NUNCA invente.
-3. Retorne SOMENTE JSON.
+CRITÉRIOS (enum: tranquilo|atencao|sensivel|forte|nao_identificado):
 
-CRITÉRIOS POSITIVOS (enum: tranquilo|atencao|sensivel|forte|nao_identificado):
-Violência (inclui racismo, discriminação), Linguagem, Identidade de Gênero, Sexo, Medo/Terror, Morte, Bullying, Respeito, Obediência, Ocultismo.
+⚔️ Violência: brigas, agressões, armas, ferimentos, atos violentos.
+   INCLUI: discurso de ódio, racismo, antissemitismo, apologia ao nazismo,
+   qualquer forma de discriminação racial ou étnica.
 
-CRITÉRIO NEGATIVO (enum: tranquilo|atencao|sensivel|forte|nao_identificado):
-"Oposição ao cristianismo":
-- Livro NÃO critica a fé cristã → "tranquilo"
-- Livro ridiculariza ou ataca cristãos → "forte"
-- Livro é neutro sobre religião → "tranquilo"
+🗣️ Linguagem: palavrões, xingamentos, gírias vulgares, blasfêmias, tom desrespeitoso.
 
-VALORES (número 0-5):
-- 0 = nenhum valor positivo | 3 = valores positivos presentes (amizade, coragem) | 5 = valores cristãos explícitos.
+🌈 Identidade de Gênero: se o livro aborda ou promove discussões sobre
+   identidade de gênero.
 
-NOTA SENSÍVEL (número 0-5):
-- 0 = nenhum conteúdo sensível | 3 = moderado (alguns alertas 🟡) | 5 = forte (alertas 🔴).
+💞 Sexo: romance, paquera, beijos, insinuações ou conteúdo sexual.
 
-RELIGIÃO (enum: sem_conteudo|cristao|outra|ocultismo|ambiguo|nao_identificado): tipo + descricao + fonte.
+😨 Medo/Terror: cenas assustadoras, suspense intenso, pesadelos, ameaças.
 
-RETORNE JSON:
-{
- "titulo":"","autor":"","editora":"","ano":"","paginas":0,
- "faixaEtaria":"","confiabilidade":"alta|moderada|baixa",
- "nota":0,"valores":0,"notaSensivel":0,
- "vereditoNivel":"tranquilo|atencao|sensivel|forte|cristao","veredito":"",
- "criterios":{"Violência":"","Linguagem":"","Identidade de Gênero":"","Sexo":"","Medo/Terror":"","Morte":"","Bullying":"","Respeito":"","Obediência":"","Ocultismo":"","Oposição ao cristianismo":""},
- "fontesPorCriterio":{"Violência":"","Linguagem":"","Identidade de Gênero":"","Sexo":"","Medo/Terror":"","Morte":"","Bullying":"","Respeito":"","Obediência":"","Ocultismo":"","Oposição ao cristianismo":""},
- "religiao":{"tipo":"","descricao":"","fonte":""},
- "conclusao":"",
- "fontes":[{"nome":"","url":""}]
-}`;
+☠️ Morte: se a morte aparece, como é tratada, se é central na narrativa.
+
+😔 Bullying: agressão SISTEMÁTICA (perseguição, humilhação repetida,
+   intimidação, exclusão). Foco no PADRÃO, não em atitude isolada.
+
+🤝 Respeito: TOM GERAL dos personagens uns com os outros (educação,
+   cortesia, sarcasmo, malcriação, tratamento dado a colegas).
+
+📏 Obediência: se a obediência é valorizada e a desobediência é tratada
+   como positiva ou engraçada. INCLUI desrespeito a pais, professores,
+   adultos, idosos e autoridades. Se personagens desrespeitam professores
+   ou autoridades de forma recorrente e positiva (aplaudida pela narrativa),
+   marque pelo menos "atencao".
+
+🔮 Ocultismo: magia, bruxaria, rituais, espíritos, práticas esotéricas.
+
+⛪ Oposição ao cristianismo (NEGATIVO): tranquilo = livro não critica a fé;
+   forte = livro critica, ridiculariza ou ataca a fé cristã.
+
+VALORES: número 0-5 (0 = nenhum valor, 3 = valores positivos presentes,
+5 = valores cristãos explícitos).
+
+NOTA SENSÍVEL: número 0-5 (0 = nada sensível, 5 = muito sensível).
+
+RELIGIÃO: tipo (sem_conteudo|cristao|outra|ocultismo|ambiguo|nao_identificado)
++ descricao + fonte.
+
+ORDEM DAS CHAVES NO JSON (siga EXATAMENTE esta ordem):
+1. criterios (objeto com 11 chaves)
+2. fontesPorCriterio (objeto com 11 chaves, valores = array de até 3 URLs)
+3. religiao (objeto com tipo, descricao, fonte)
+4. conclusao (string)
+5. fontes (array de {nome, url})
+6. vereditoNivel (string)
+7. veredito (string)
+8. nota (número)
+9. valores (número 0-5)
+10. notaSensivel (número 0-5)
+11. titulo (string)
+12. autor (string)
+13. editora (string)
+14. ano (string)
+15. paginas (número)
+16. faixaEtaria (string)
+17. confiabilidade (string)
+
+Retorne o JSON nesta ordem exata.`;
 
   const MAX_TENTATIVAS = 3;
   const esperas = [1000, 3000, 6000];
@@ -811,8 +933,8 @@ RETORNE JSON:
       : "Nenhuma fonte web.";
 
     const promptAtual = prompt.replace(
-      /FONTES \(\d+\):\n[\s\S]*?\n\n═══ REGRA CRÍTICA:/,
-      `FONTES (${fontesAtuais.length}):\n${fontesTextoAtual}\n\n═══ REGRA CRÍTICA:`
+      /FONTES \(\d+\):\n[\s\S]*?\n\nREGRAS CRÍTICAS:/,
+      `FONTES (${fontesAtuais.length}):\n${fontesTextoAtual}\n\nREGRAS CRÍTICAS:`
     );
 
     let url, payload, headers;
@@ -826,10 +948,10 @@ RETORNE JSON:
       payload = {
         model: provedor.model,
         messages: [
-          { role: "system", content: "Responda apenas em JSON válido. Siga as regras de prioridade de fontes rigorosamente." },
+          { role: "system", content: "Responda apenas em JSON válido seguindo a ordem de chaves pedida." },
           { role: "user", content: promptAtual }
         ],
-        temperature: 0.1,
+        temperature: 0.0,
         response_format: { type: "json_object" },
         max_tokens: provedor.maxTokens
       };
@@ -841,7 +963,7 @@ RETORNE JSON:
           { role: "user", parts: [{ text: promptAtual }] }
         ],
         generationConfig: {
-          temperature: 0.1,
+          temperature: 0.0,
           maxOutputTokens: provedor.maxTokens,
           responseMimeType: "application/json"
         }
@@ -864,6 +986,11 @@ RETORNE JSON:
         fontesAtuais = fontesAtuais.slice(0, Math.max(2, Math.floor(fontesAtuais.length / 2)));
         if (i < MAX_TENTATIVAS - 1) await new Promise(res => setTimeout(res, esperas[i]));
         continue;
+      }
+
+      if (r.status === 400) {
+        const texto = await r.text();
+        throw new Error(`${provedor.nome} 400 (JSON inválido): ${texto.slice(0, 200)}`);
       }
 
       if (r.status === 503 || r.status === 429 || r.status === 500) {
@@ -910,6 +1037,7 @@ RETORNE JSON:
     } catch (e) {
       ultimoErro = e;
       if (e.message.includes("404")) throw e;
+      if (e.message.includes("400")) throw e;
       if (!new RegExp(`${provedor.nome} (503|429|500|413)`).test(e.message)) throw e;
       if (i < MAX_TENTATIVAS - 1) await new Promise(res => setTimeout(res, esperas[i]));
     }
@@ -955,9 +1083,6 @@ function sanitizarFontes(fontesIA, fontesReais) {
     .filter(Boolean);
 }
 
-// ============================================================
-// clamp numérico — garante 0-5
-// ============================================================
 function clamp(valor, min, max) {
   const n = Number(valor);
   if (!isFinite(n)) return 0;
