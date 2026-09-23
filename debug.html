@@ -12,6 +12,7 @@
     color: #eef1ff;
     padding: 16px;
     line-height: 1.5;
+    padding-bottom: 60px;
   }
   h1 { font-size: 18px; margin-bottom: 4px; }
   .sub { font-size: 13px; opacity: 0.6; margin-bottom: 16px; }
@@ -50,6 +51,9 @@
   button.secondary {
     background: #2c3654;
     color: #eef1ff;
+  }
+  button.grande {
+    background: linear-gradient(135deg, #34d399, #10b981);
   }
   .status {
     font-size: 13px;
@@ -90,6 +94,54 @@
     opacity: 0.5;
     margin-bottom: 8px;
   }
+
+  /* ---- Cards do teste em lote ---- */
+  .card {
+    background: #141a29;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+    border-left: 4px solid #3a4460;
+  }
+  .card.ok { border-left-color: #34d399; }
+  .card.err { border-left-color: #ff6b6b; }
+  .card.pending { border-left-color: #3a4460; opacity: 0.6; }
+  .card-titulo { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .card-linha { font-size: 12px; opacity: 0.75; margin: 2px 0; }
+  .card-linha b { opacity: 1; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 6px;
+  }
+  .badge.alta { background: rgba(52,211,153,0.18); color: #34d399; }
+  .badge.moderada { background: rgba(255,224,138,0.18); color: #ffe08a; }
+  .badge.baixa, .badge.nao_confiavel { background: rgba(255,107,107,0.18); color: #ff6b6b; }
+  .card-detalhe {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 10.5px;
+    color: #ff9b9b;
+    background: rgba(255,107,107,0.08);
+    border-radius: 8px;
+    padding: 8px;
+    margin-top: 6px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  #resumo-lote {
+    display: none;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    background: #141a29;
+    margin-top: 8px;
+  }
 </style>
 </head>
 <body>
@@ -110,6 +162,18 @@
   <button onclick="rodarPersonalizado()">🔎 Analisar</button>
 </div>
 
+<div class="box">
+  <div class="section-title">Teste de estresse (7 livros)</div>
+  <p class="sub" style="margin-bottom:10px;">
+    Respeita o rate limit (6 análises/60s) — pausa automática entre lotes.
+    Demora uns 3-4 minutos no total.
+  </p>
+  <button class="grande" id="btn-lote" onclick="rodarLote()">🚀 Rodar teste completo</button>
+  <div id="status-lote" class="status" style="margin-top:8px;"></div>
+  <div id="cards-lote"></div>
+  <div id="resumo-lote"></div>
+</div>
+
 <div id="status" class="status"></div>
 
 <div class="box" id="resultado-box" style="display:none;">
@@ -121,6 +185,9 @@
 <script>
 const WORKER_URL = "https://guia-de-livros-brain.ihcsolutions-contato.workers.dev";
 
+// ============================================================
+// Teste único (já existia)
+// ============================================================
 async function rodar(titulo, autor) {
   const status = document.getElementById("status");
   const box = document.getElementById("resultado-box");
@@ -166,6 +233,122 @@ function copiar() {
     () => alert("JSON copiado!"),
     () => alert("Não consegui copiar. Segura e seleciona manualmente.")
   );
+}
+
+// ============================================================
+// Teste de estresse em lote (novo) — mesma lógica do
+// teste-estresse-v5.14.js, adaptado pra tela em vez de console.
+// ============================================================
+const LIVROS_LOTE = [
+  { titulo: "Reinações de Narizinho", autor: "Monteiro Lobato" },
+  { titulo: "O Menino Maluquinho", autor: "Ziraldo" },
+  { titulo: "O Pequeno Príncipe", autor: "" },
+  { titulo: "A Teia de Charlotte", autor: "E. B. White" },
+  { titulo: "Harry Potter e a Pedra Filosofal", autor: "J.K. Rowling" },
+  { titulo: "Diário de um Banana", autor: "Jeff Kinney" },
+  { titulo: "Escola do Terror: Vamos matar a professora de medo!", autor: "" }
+];
+
+const LOTE_MAX = 6;
+const PAUSA_ENTRE_LIVROS_MS = 2000;
+const PAUSA_ENTRE_LOTES_MS = 65000;
+
+function escHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+function cardPendenteLote(container, i, titulo) {
+  const div = document.createElement("div");
+  div.className = "card pending";
+  div.id = "lote-card-" + i;
+  div.innerHTML = `<div class="card-titulo">[${i + 1}/${LIVROS_LOTE.length}] ${escHtml(titulo)}</div><div class="card-linha">⏳ testando...</div>`;
+  container.appendChild(div);
+  return div;
+}
+
+async function rodarLote() {
+  const btn = document.getElementById("btn-lote");
+  const statusEl = document.getElementById("status-lote");
+  const cardsEl = document.getElementById("cards-lote");
+  const resumoEl = document.getElementById("resumo-lote");
+
+  btn.disabled = true;
+  btn.textContent = "Rodando...";
+  cardsEl.innerHTML = "";
+  resumoEl.style.display = "none";
+  statusEl.className = "status show loading";
+
+  let sucessos = 0, falhas = 0;
+
+  for (let i = 0; i < LIVROS_LOTE.length; i++) {
+    const l = LIVROS_LOTE[i];
+    statusEl.textContent = `Testando ${i + 1}/${LIVROS_LOTE.length}: ${l.titulo}`;
+    const card = cardPendenteLote(cardsEl, i, l.titulo);
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+    try {
+      const inicio = Date.now();
+      const r = await fetch(WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(l)
+      });
+      const d = await r.json();
+      const tempo = ((Date.now() - inicio) / 1000).toFixed(1);
+
+      if (d.erro) {
+        falhas++;
+        card.className = "card err";
+        card.innerHTML = `
+          <div class="card-titulo">[${i + 1}/${LIVROS_LOTE.length}] ${escHtml(l.titulo)}</div>
+          <div class="card-linha">❌ ERRO: <b>${escHtml(d.erro)}</b> · ${tempo}s</div>
+          <div class="card-detalhe">${escHtml(d.detalhe || d.mensagem || "(sem detalhe)")}</div>
+        `;
+      } else {
+        sucessos++;
+        const det = d._confiabilidade_detalhe || {};
+        const sinais = det.sinais_notoriedade || {};
+        const naoIdent = Object.entries(d.criterios || {})
+          .filter(p => p[1] === "nao_identificado").map(p => p[0]);
+
+        card.className = "card ok";
+        card.innerHTML = `
+          <div class="card-titulo">✅ ${escHtml(d.titulo)}<span class="badge ${escHtml(d.confiabilidade)}">${escHtml(d.confiabilidade)}</span></div>
+          <div class="card-linha">C_web: <b>${det.criterios_com_fonte_web ?? 0}</b> · C_ia: <b>${det.criterios_com_conhecimento_ia ?? 0}</b> · C_vazio: <b>${det.criterios_vazios ?? 0}</b></div>
+          <div class="card-linha">Autoclamado: <b>${det.livro_autoclamado_pela_ia}</b> · Corroborado: <b>${det.livro_corroborado_externamente}</b> · Final: <b>${det.livro_conhecido_pela_ia}</b></div>
+          <div class="card-linha">Avaliações GB: <b>${sinais.avaliacoes_google_books ?? "?"}</b> · Edições OL: <b>${sinais.edicoes_open_library ?? "?"}</b> · Edições GB: <b>${sinais.edicoes_google_books ?? "?"}</b> · Fontes (F): <b>${sinais.fontes_web_total ?? "?"}</b></div>
+          <div class="card-linha">Faltando: <b>${(det.campos_faltando || []).join(", ") || "nada"}</b> · Não identif.: <b>${naoIdent.join(", ") || "nenhum"}</b> · Capa: <b>${d.capa ? "✅" : "❌"}</b> · ${tempo}s</div>
+          ${l.titulo.indexOf("Escola do Terror") === 0 ? `
+          <div class="card-linha">🎯 Obediência: <b>${escHtml(d.criterios?.["Obediência"] || "?")}</b> · Respeito: <b>${escHtml(d.criterios?.["Respeito"] || "?")}</b> · Bullying: <b>${escHtml(d.criterios?.["Bullying"] || "?")}</b></div>
+          <div class="card-linha">📝 Origem Obediência: <b>${escHtml(d.origemPorCriterio?.["Obediência"] || "—")}</b></div>` : ""}
+        `;
+      }
+    } catch (e) {
+      falhas++;
+      card.className = "card err";
+      card.innerHTML = `<div class="card-titulo">[${i + 1}/${LIVROS_LOTE.length}] ${escHtml(l.titulo)}</div><div class="card-linha">❌ EXCEÇÃO: ${escHtml(e.message)}</div>`;
+    }
+
+    if (i < LIVROS_LOTE.length - 1) {
+      const chegouAoTeto = (i + 1) % LOTE_MAX === 0;
+      if (chegouAoTeto) {
+        for (let s = Math.floor(PAUSA_ENTRE_LOTES_MS / 1000); s > 0; s--) {
+          statusEl.textContent = `⏳ Pausa de rate limit: ${s}s restantes...`;
+          await sleep(1000);
+        }
+      } else {
+        await sleep(PAUSA_ENTRE_LIVROS_MS);
+      }
+    }
+  }
+
+  statusEl.className = "status show ok";
+  statusEl.textContent = "🏁 Teste concluído.";
+  resumoEl.style.display = "block";
+  resumoEl.textContent = `${sucessos} sucesso(s) · ${falhas} falha(s) de ${LIVROS_LOTE.length} livros.`;
+  btn.disabled = false;
+  btn.textContent = "🚀 Rodar de novo";
 }
 </script>
 
