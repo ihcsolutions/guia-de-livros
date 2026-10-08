@@ -322,7 +322,7 @@ async function rodarLote() {
           <div class="card-linha">Autoclamado: <b>${det.livro_autoclamado_pela_ia}</b> · Corroborado: <b>${det.livro_corroborado_externamente}</b> · Final: <b>${det.livro_conhecido_pela_ia}</b></div>
           <div class="card-linha">Avaliações GB: <b>${sinais.avaliacoes_google_books ?? "?"}</b> · Edições OL: <b>${sinais.edicoes_open_library ?? "?"}</b> · Edições GB: <b>${sinais.edicoes_google_books ?? "?"}</b> · Fontes (F): <b>${sinais.fontes_web_total ?? "?"}</b></div>
           <div class="card-linha">Faltando: <b>${(det.campos_faltando || []).join(", ") || "nada"}</b> · Não identif.: <b>${naoIdent.join(", ") || "nenhum"}</b> · Capa: <b>${d.capa ? "✅" : "❌"}</b> · ${tempo}s</div>
-          <div class="card-linha">Título usado: <b>${escHtml(det.titulo_usado_na_analise || "?")}</b> · Fontes descartadas: <b>${det.fontes_descartadas_irrelevantes ?? "?"}</b> · Livro errado: <b>${det.livro_errado_detectado ? "🚨 SIM" : "não"}</b></div>
+          <div class="card-linha">Título usado: <b>${escHtml(det.titulo_usado_na_analise || "?")}</b> · Fontes descartadas: <b>${det.fontes_descartadas_irrelevantes ?? "?"}</b> · Livro errado: <b>${det.livro_errado_detectado ? "🚨 SIM" : "não"}</b> · Critérios sem base rebaixados: <b>${det.criterios_sem_base_rebaixados ?? "?"}</b></div>
           <div class="card-linha">Alertas: <b>${escHtml(Object.entries(d.criterios || {}).filter(p => !["tranquilo","nao_identificado"].includes(p[1])).map(p => p[0] + "=" + p[1]).join(", ") || "nenhum")}</b></div>
           ${d.aviso ? `<div class="card-linha">⚠️ Aviso: <b>${escHtml(d.aviso)}</b></div>` : ""}
           <div class="card-linha">📖 ${escHtml(d.sinopse || "(sem sinopse)")} <i>Tema: ${escHtml(d.temaCentral || "?")}</i></div>
