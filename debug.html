@@ -239,14 +239,17 @@ function copiar() {
 // Teste de estresse em lote (novo) — mesma lógica do
 // teste-estresse-v5.14.js, adaptado pra tela em vez de console.
 // ============================================================
+// v5.25: lote trocado pelos casos REAIS relatados pelos testers (01/10)
+// + 2 controles de regressão (Harry Potter deve continuar com Ocultismo;
+// Escola do Terror deve continuar com alerta em Obediência).
 const LIVROS_LOTE = [
-  { titulo: "Reinações de Narizinho", autor: "Monteiro Lobato" },
-  { titulo: "O Menino Maluquinho", autor: "Ziraldo" },
-  { titulo: "O Pequeno Príncipe", autor: "" },
-  { titulo: "A Teia de Charlotte", autor: "E. B. White" },
-  { titulo: "Harry Potter e a Pedra Filosofal", autor: "J.K. Rowling" },
-  { titulo: "Diário de um Banana", autor: "Jeff Kinney" },
-  { titulo: "Escola do Terror: Vamos matar a professora de medo!", autor: "" }
+  { titulo: "A irmã de Gildo", autor: "" },                       // antes: livro errado
+  { titulo: "Ao longo de um rio", autor: "" },                    // antes: "Direito ao dever"
+  { titulo: "Memórias de um burro", autor: "" },                  // antes: bullying/maus-tratos
+  { titulo: "Padington precisa ir ao hospital", autor: "" },      // typo + antes: medo/terror
+  { titulo: "Reinações de Narisinho", autor: "" },                // typo proposital
+  { titulo: "Harry Potter e a Pedra Filosofal", autor: "J.K. Rowling" }, // controle
+  { titulo: "Escola do Terror: Vamos matar a professora de medo!", autor: "" } // controle
 ];
 
 const LOTE_MAX = 6;
@@ -319,6 +322,10 @@ async function rodarLote() {
           <div class="card-linha">Autoclamado: <b>${det.livro_autoclamado_pela_ia}</b> · Corroborado: <b>${det.livro_corroborado_externamente}</b> · Final: <b>${det.livro_conhecido_pela_ia}</b></div>
           <div class="card-linha">Avaliações GB: <b>${sinais.avaliacoes_google_books ?? "?"}</b> · Edições OL: <b>${sinais.edicoes_open_library ?? "?"}</b> · Edições GB: <b>${sinais.edicoes_google_books ?? "?"}</b> · Fontes (F): <b>${sinais.fontes_web_total ?? "?"}</b></div>
           <div class="card-linha">Faltando: <b>${(det.campos_faltando || []).join(", ") || "nada"}</b> · Não identif.: <b>${naoIdent.join(", ") || "nenhum"}</b> · Capa: <b>${d.capa ? "✅" : "❌"}</b> · ${tempo}s</div>
+          <div class="card-linha">Título usado: <b>${escHtml(det.titulo_usado_na_analise || "?")}</b> · Fontes descartadas: <b>${det.fontes_descartadas_irrelevantes ?? "?"}</b> · Livro errado: <b>${det.livro_errado_detectado ? "🚨 SIM" : "não"}</b></div>
+          <div class="card-linha">Alertas: <b>${escHtml(Object.entries(d.criterios || {}).filter(p => !["tranquilo","nao_identificado"].includes(p[1])).map(p => p[0] + "=" + p[1]).join(", ") || "nenhum")}</b></div>
+          ${d.aviso ? `<div class="card-linha">⚠️ Aviso: <b>${escHtml(d.aviso)}</b></div>` : ""}
+          <div class="card-linha">📖 ${escHtml(d.sinopse || "(sem sinopse)")} <i>Tema: ${escHtml(d.temaCentral || "?")}</i></div>
           ${l.titulo.indexOf("Escola do Terror") === 0 ? `
           <div class="card-linha">🎯 Obediência: <b>${escHtml(d.criterios?.["Obediência"] || "?")}</b> · Respeito: <b>${escHtml(d.criterios?.["Respeito"] || "?")}</b> · Bullying: <b>${escHtml(d.criterios?.["Bullying"] || "?")}</b></div>
           <div class="card-linha">📝 Origem Obediência: <b>${escHtml(d.origemPorCriterio?.["Obediência"] || "—")}</b></div>` : ""}
